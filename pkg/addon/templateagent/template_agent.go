@@ -9,6 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
+	corev1listers "k8s.io/client-go/listers/core/v1"
 	rbacv1lister "k8s.io/client-go/listers/rbac/v1"
 	"k8s.io/klog/v2"
 
@@ -49,13 +50,14 @@ type CRDTemplateAgentAddon struct {
 	getValuesFuncs     []addonfactory.GetValuesFunc
 	trimCRDDescription bool
 
-	hubKubeClient       kubernetes.Interface
-	addonClient         addonv1alpha1client.Interface
-	addonLister         addonlisterv1alpha1.ManagedClusterAddOnLister
-	addonTemplateLister addonlisterv1alpha1.AddOnTemplateLister
-	rolebindingLister   rbacv1lister.RoleBindingLister
-	addonName           string
-	agentName           string
+	hubKubeClient          kubernetes.Interface
+	addonClient            addonv1alpha1client.Interface
+	addonLister            addonlisterv1alpha1.ManagedClusterAddOnLister
+	addonTemplateLister    addonlisterv1alpha1.AddOnTemplateLister
+	rolebindingLister      rbacv1lister.RoleBindingLister
+	customSignSecretLister corev1listers.SecretLister
+	addonName              string
+	agentName              string
 }
 
 // NewCRDTemplateAgentAddon creates a CRDTemplateAgentAddon instance
@@ -65,6 +67,7 @@ func NewCRDTemplateAgentAddon(
 	addonClient addonv1alpha1client.Interface,
 	addonInformers addoninformers.SharedInformerFactory,
 	rolebindingLister rbacv1lister.RoleBindingLister,
+	customSignSecretLister corev1listers.SecretLister,
 	getValuesFuncs ...addonfactory.GetValuesFunc,
 ) *CRDTemplateAgentAddon {
 
@@ -72,13 +75,14 @@ func NewCRDTemplateAgentAddon(
 		getValuesFuncs:     getValuesFuncs,
 		trimCRDDescription: true,
 
-		hubKubeClient:       hubKubeClient,
-		addonClient:         addonClient,
-		addonLister:         addonInformers.Addon().V1alpha1().ManagedClusterAddOns().Lister(),
-		addonTemplateLister: addonInformers.Addon().V1alpha1().AddOnTemplates().Lister(),
-		rolebindingLister:   rolebindingLister,
-		addonName:           addonName,
-		agentName:           agentName,
+		hubKubeClient:          hubKubeClient,
+		addonClient:            addonClient,
+		addonLister:            addonInformers.Addon().V1alpha1().ManagedClusterAddOns().Lister(),
+		addonTemplateLister:    addonInformers.Addon().V1alpha1().AddOnTemplates().Lister(),
+		rolebindingLister:      rolebindingLister,
+		customSignSecretLister: customSignSecretLister,
+		addonName:              addonName,
+		agentName:              agentName,
 	}
 
 	return a

@@ -9,8 +9,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/client-go/informers"
 	kubeinformers "k8s.io/client-go/informers"
 	fakekube "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -138,6 +140,11 @@ func TestAddonTemplateAgent_Manifests(t *testing.T) {
 	}
 	kubeInformers := kubeinformers.NewSharedInformerFactoryWithOptions(hubKubeClient, 10*time.Minute)
 
+	customSignCASecretInformer := informers.NewSharedInformerFactoryWithOptions(hubKubeClient, 10*time.Minute,
+		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
+			options.FieldSelector = fields.OneTermEqualSelector("metadata.name", CustomSignerSecretName).String()
+		}))
+
 	agentAddon := NewCRDTemplateAgentAddon(
 		addonName,
 		"test-agent",
@@ -145,6 +152,7 @@ func TestAddonTemplateAgent_Manifests(t *testing.T) {
 		addonClient,
 		addonInformerFactory,
 		kubeInformers.Rbac().V1().RoleBindings().Lister(),
+		customSignCASecretInformer.Core().V1().Secrets().Lister(),
 		addonfactory.GetAddOnDeploymentConfigValues(
 			addonfactory.NewAddOnDeploymentConfigGetter(addonClient),
 			addonfactory.ToAddOnCustomizedVariableValues,

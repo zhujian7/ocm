@@ -16,7 +16,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/client-go/kubernetes"
+	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/klog/v2"
 
 	"open-cluster-management.io/addon-framework/pkg/agent"
@@ -217,7 +217,7 @@ func (a *CRDTemplateAgentAddon) TemplateCSRSignFunc() agent.CSRSignerFunc {
 					continue
 				}
 				if csr.Spec.SignerName == registration.CustomSigner.SignerName {
-					return CustomSignerWithExpiry(a.hubKubeClient, registration.CustomSigner, 24*time.Hour)(csr)
+					return CustomSignerWithExpiry(a.customSignSecretLister, registration.CustomSigner, 24*time.Hour)(csr)
 				}
 
 			default:
@@ -231,7 +231,8 @@ func (a *CRDTemplateAgentAddon) TemplateCSRSignFunc() agent.CSRSignerFunc {
 }
 
 func CustomSignerWithExpiry(
-	kubeclient kubernetes.Interface,
+	// kubeclient kubernetes.Interface,
+	secretLister corev1listers.SecretLister,
 	customSignerConfig *addonapiv1alpha1.CustomSignerRegistrationConfig,
 	duration time.Duration) agent.CSRSignerFunc {
 	return func(csr *certificatesv1.CertificateSigningRequest) []byte {
@@ -243,8 +244,10 @@ func CustomSignerWithExpiry(
 		if csr.Spec.SignerName != customSignerConfig.SignerName {
 			return nil
 		}
-		caSecret, err := kubeclient.CoreV1().Secrets(customSignerConfig.SigningCA.Namespace).Get(
-			context.TODO(), CustomSignerSecretName, metav1.GetOptions{})
+
+		caSecret, err := secretLister.Secrets(customSignerConfig.SigningCA.Namespace).Get(CustomSignerSecretName)
+		// caSecret, err := kubeclient.CoreV1().Secrets(customSignerConfig.SigningCA.Namespace).Get(
+		// 	context.TODO(), CustomSignerSecretName, metav1.GetOptions{})
 		if err != nil {
 			utilruntime.HandleError(fmt.Errorf("get custome signer ca %s/%s failed, %v",
 				customSignerConfig.SigningCA.Namespace, CustomSignerSecretName, err))

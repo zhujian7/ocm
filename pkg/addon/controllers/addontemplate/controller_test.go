@@ -7,9 +7,12 @@ import (
 	"time"
 
 	"github.com/openshift/library-go/pkg/operator/events/eventstesting"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic/dynamicinformer"
 	dynamicfake "k8s.io/client-go/dynamic/fake"
+	"k8s.io/client-go/informers"
 	fakekube "k8s.io/client-go/kubernetes/fake"
 
 	"open-cluster-management.io/addon-framework/pkg/addonmanager/addontesting"
@@ -22,6 +25,7 @@ import (
 	fakework "open-cluster-management.io/api/client/work/clientset/versioned/fake"
 	workinformers "open-cluster-management.io/api/client/work/informers/externalversions"
 
+	"open-cluster-management.io/ocm/pkg/addon/templateagent"
 	testingcommon "open-cluster-management.io/ocm/pkg/common/testing"
 )
 
@@ -169,6 +173,10 @@ func TestReconcile(t *testing.T) {
 		workInformers := workinformers.NewSharedInformerFactory(fakeWorkClient, 10*time.Minute)
 
 		hubKubeClient := fakekube.NewSimpleClientset()
+		customSignCASecretInformer := informers.NewSharedInformerFactoryWithOptions(hubKubeClient, 10*time.Minute,
+			informers.WithTweakListOptions(func(options *metav1.ListOptions) {
+				options.FieldSelector = fields.OneTermEqualSelector("metadata.name", templateagent.CustomSignerSecretName).String()
+			}))
 
 		controller := NewAddonTemplateController(
 			nil,
@@ -178,6 +186,7 @@ func TestReconcile(t *testing.T) {
 			clusterInformers,
 			dynamicInformerFactory,
 			workInformers,
+			customSignCASecretInformer,
 			eventstesting.NewTestingEventRecorder(t),
 			runController,
 		)

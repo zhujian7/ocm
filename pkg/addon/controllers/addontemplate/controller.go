@@ -13,8 +13,8 @@ import (
 	"k8s.io/client-go/dynamic/dynamicinformer"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
+	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
 
 	"open-cluster-management.io/addon-framework/pkg/addonfactory"
@@ -37,15 +37,16 @@ type addonTemplateController struct {
 	// The key is the name of the template type addon.
 	addonManagers map[string]context.CancelFunc
 
-	kubeConfig        *rest.Config
-	addonClient       addonv1alpha1client.Interface
-	kubeClient        kubernetes.Interface
-	cmaLister         addonlisterv1alpha1.ClusterManagementAddOnLister
-	addonInformers    addoninformers.SharedInformerFactory
-	clusterInformers  clusterv1informers.SharedInformerFactory
-	dynamicInformers  dynamicinformer.DynamicSharedInformerFactory
-	workInformers     workv1informers.SharedInformerFactory
-	runControllerFunc runController
+	kubeConfig               *rest.Config
+	addonClient              addonv1alpha1client.Interface
+	kubeClient               kubernetes.Interface
+	cmaLister                addonlisterv1alpha1.ClusterManagementAddOnLister
+	addonInformers           addoninformers.SharedInformerFactory
+	clusterInformers         clusterv1informers.SharedInformerFactory
+	dynamicInformers         dynamicinformer.DynamicSharedInformerFactory
+	workInformers            workv1informers.SharedInformerFactory
+	customSignerSecretLister corev1listers.SecretLister
+	runControllerFunc        runController
 }
 
 type runController func(ctx context.Context, addonName string) error
@@ -59,19 +60,21 @@ func NewAddonTemplateController(
 	clusterInformers clusterv1informers.SharedInformerFactory,
 	dynamicInformers dynamicinformer.DynamicSharedInformerFactory,
 	workInformers workv1informers.SharedInformerFactory,
+	customSignCASecretInformer kubeinformers.SharedInformerFactory,
 	recorder events.Recorder,
 	runController ...runController,
 ) factory.Controller {
 	c := &addonTemplateController{
-		kubeConfig:       hubKubeconfig,
-		kubeClient:       hubKubeClient,
-		addonClient:      addonClient,
-		cmaLister:        addonInformers.Addon().V1alpha1().ClusterManagementAddOns().Lister(),
-		addonManagers:    make(map[string]context.CancelFunc),
-		addonInformers:   addonInformers,
-		clusterInformers: clusterInformers,
-		dynamicInformers: dynamicInformers,
-		workInformers:    workInformers,
+		kubeConfig:               hubKubeconfig,
+		kubeClient:               hubKubeClient,
+		addonClient:              addonClient,
+		cmaLister:                addonInformers.Addon().V1alpha1().ClusterManagementAddOns().Lister(),
+		addonManagers:            make(map[string]context.CancelFunc),
+		addonInformers:           addonInformers,
+		clusterInformers:         clusterInformers,
+		dynamicInformers:         dynamicInformers,
+		workInformers:            workInformers,
+		customSignerSecretLister: customSignCASecretInformer.Core().V1().Secrets().Lister(),
 	}
 
 	if len(runController) > 0 {
@@ -81,7 +84,7 @@ func NewAddonTemplateController(
 		c.runControllerFunc = c.runController
 	}
 	return factory.New().WithInformersQueueKeysFunc(
-		queue.QueueKeyByMetaNamespaceName,
+		queue.QueueKeyByMetaName,
 		addonInformers.Addon().V1alpha1().ClusterManagementAddOns().Informer()).
 		WithSync(c.sync).
 		ToController("addon-template-controller", recorder)
@@ -98,12 +101,8 @@ func (c *addonTemplateController) stopUnusedManagers(
 }
 
 func (c *addonTemplateController) sync(ctx context.Context, syncCtx factory.SyncContext) error {
-	key := syncCtx.QueueKey()
-	_, addonName, err := cache.SplitMetaNamespaceKey(key)
-	if err != nil {
-		// ignore addon whose key is not in format: namespace/name
-		return nil
-	}
+	addonName := syncCtx.QueueKey()
+	klog.V(4).Infof("Syncing addon %s", addonName)
 
 	cma, err := c.cmaLister.Get(addonName)
 	if err != nil {
@@ -186,6 +185,7 @@ func (c *addonTemplateController) runController(
 		c.addonClient,
 		c.addonInformers,
 		kubeInformers.Rbac().V1().RoleBindings().Lister(),
+		c.customSignerSecretLister,
 		addonfactory.GetAddOnDeploymentConfigValues(
 			addonfactory.NewAddOnDeploymentConfigGetter(c.addonClient),
 			addonfactory.ToAddOnCustomizedVariableValues,

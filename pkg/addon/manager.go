@@ -6,8 +6,10 @@ import (
 
 	"github.com/openshift/library-go/pkg/controller/controllercmd"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/dynamic/dynamicinformer"
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 
@@ -27,6 +29,7 @@ import (
 	"open-cluster-management.io/ocm/pkg/addon/controllers/addonprogressing"
 	"open-cluster-management.io/ocm/pkg/addon/controllers/addontemplate"
 	"open-cluster-management.io/ocm/pkg/addon/controllers/managementaddoninstallprogression"
+	"open-cluster-management.io/ocm/pkg/addon/templateagent"
 )
 
 func RunManager(ctx context.Context, controllerContext *controllercmd.ControllerContext) error {
@@ -116,6 +119,11 @@ func RunManager(ctx context.Context, controllerContext *controllercmd.Controller
 
 	dynamicInformers := dynamicinformer.NewDynamicSharedInformerFactory(dynamicClient, 10*time.Minute)
 
+	customSignCASecretInformer := informers.NewSharedInformerFactoryWithOptions(hubKubeClient, 10*time.Minute,
+		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
+			options.FieldSelector = fields.OneTermEqualSelector("metadata.name", templateagent.CustomSignerSecretName).String()
+		}))
+
 	addonManagementController := addonmanagement.NewAddonManagementController(
 		addonClient,
 		addonInformerFactory.Addon().V1alpha1().ManagedClusterAddOns(),
@@ -169,6 +177,7 @@ func RunManager(ctx context.Context, controllerContext *controllercmd.Controller
 		clusterInformerFactory,
 		dynamicInformers,
 		workInformers,
+		customSignCASecretInformer,
 		controllerContext.EventRecorder,
 	)
 
@@ -185,6 +194,7 @@ func RunManager(ctx context.Context, controllerContext *controllercmd.Controller
 	addonInformerFactory.Start(ctx.Done())
 	workInformers.Start(ctx.Done())
 	dynamicInformers.Start(ctx.Done())
+	customSignCASecretInformer.Start(ctx.Done())
 
 	<-ctx.Done()
 	return nil
