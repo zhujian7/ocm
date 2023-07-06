@@ -5,8 +5,12 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/api/equality"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	clienttesting "k8s.io/client-go/testing"
 
 	clusterfake "open-cluster-management.io/api/client/cluster/clientset/versioned/fake"
@@ -143,6 +147,122 @@ func TestRemoveFinalizer(t *testing.T) {
 				clusterClient.ClusterV1().ManagedClusters())
 			if err := patcher.RemoveFinalizer(context.TODO(), c.obj, c.finalizers...); err != nil {
 				t.Error(err)
+			}
+			c.validateActions(t, clusterClient.Actions())
+		})
+	}
+}
+
+func TestRemoveFinalizerConflict(t *testing.T) {
+	defaultPatchReaction := func(count int) clienttesting.ReactionFunc {
+		return func(action clienttesting.Action) (handled bool, ret runtime.Object, err error) {
+			if count > 0 {
+				count--
+				return true, nil, errors.NewConflict(schema.GroupResource{}, "test", nil)
+			}
+			return false, nil, nil
+		}
+	}
+	getErrorReaction := func(action clienttesting.Action) (handled bool, ret runtime.Object, err error) {
+		return true, nil, errors.NewNotFound(schema.GroupResource{}, "test")
+	}
+
+	cases := []struct {
+		name            string
+		obj             *clusterv1.ManagedCluster
+		finalizers      []string
+		getReaction     clienttesting.ReactionFunc
+		patchReaction   clienttesting.ReactionFunc
+		expectedError   string
+		validateActions func(t *testing.T, actions []clienttesting.Action)
+	}{
+		{
+			name:          "remove finalizer, no conflict",
+			obj:           newManagedClusterWithFinalizer("test-finalizer", "test-finalizer-1"),
+			finalizers:    []string{"test-finalizer"},
+			patchReaction: defaultPatchReaction(0),
+			validateActions: func(t *testing.T, actions []clienttesting.Action) {
+				testingcommon.AssertActions(t, actions, "patch")
+				patch := actions[0].(clienttesting.PatchAction).GetPatch()
+				managedCluster := &clusterv1.ManagedCluster{}
+				err := json.Unmarshal(patch, managedCluster)
+				if err != nil {
+					t.Fatal(err)
+				}
+				testinghelpers.AssertFinalizers(t, managedCluster, []string{"test-finalizer-1"})
+			},
+		},
+		{
+			name:          "remove finalizer, conflict once",
+			obj:           newManagedClusterWithFinalizer("test-finalizer", "test-finalizer-1"),
+			finalizers:    []string{"test-finalizer"},
+			patchReaction: defaultPatchReaction(1),
+			validateActions: func(t *testing.T, actions []clienttesting.Action) {
+				testingcommon.AssertActions(t, actions, "patch", "get", "patch")
+				patch := actions[0].(clienttesting.PatchAction).GetPatch()
+				managedCluster := &clusterv1.ManagedCluster{}
+				err := json.Unmarshal(patch, managedCluster)
+				if err != nil {
+					t.Fatal(err)
+				}
+				testinghelpers.AssertFinalizers(t, managedCluster, []string{"test-finalizer-1"})
+			},
+		},
+		{
+			name:          "remove finalizer, conflict once",
+			obj:           newManagedClusterWithFinalizer("test-finalizer", "test-finalizer-1"),
+			finalizers:    []string{"test-finalizer"},
+			patchReaction: defaultPatchReaction(2),
+			validateActions: func(t *testing.T, actions []clienttesting.Action) {
+				testingcommon.AssertActions(t, actions, "patch", "get", "patch", "get", "patch")
+				patch := actions[0].(clienttesting.PatchAction).GetPatch()
+				managedCluster := &clusterv1.ManagedCluster{}
+				err := json.Unmarshal(patch, managedCluster)
+				if err != nil {
+					t.Fatal(err)
+				}
+				testinghelpers.AssertFinalizers(t, managedCluster, []string{"test-finalizer-1"})
+			},
+		},
+		{
+			name:          "remove finalizer, conflict get error",
+			obj:           newManagedClusterWithFinalizer("test-finalizer", "test-finalizer-1"),
+			finalizers:    []string{"test-finalizer"},
+			patchReaction: defaultPatchReaction(1),
+			getReaction:   getErrorReaction,
+			expectedError: ` "test" not found`,
+			validateActions: func(t *testing.T, actions []clienttesting.Action) {
+				testingcommon.AssertActions(t, actions, "patch", "get")
+				patch := actions[0].(clienttesting.PatchAction).GetPatch()
+				managedCluster := &clusterv1.ManagedCluster{}
+				err := json.Unmarshal(patch, managedCluster)
+				if err != nil {
+					t.Fatal(err)
+				}
+				testinghelpers.AssertFinalizers(t, managedCluster, []string{"test-finalizer-1"})
+			},
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			clusterClient := clusterfake.NewSimpleClientset(c.obj)
+
+			if c.getReaction != nil {
+				clusterClient.PrependReactor("get", "managedclusters", c.getReaction)
+			}
+			if c.patchReaction != nil {
+				clusterClient.PrependReactor("patch", "managedclusters", c.patchReaction)
+			}
+
+			patcher := NewPatcher[
+				*clusterv1.ManagedCluster, clusterv1.ManagedClusterSpec, clusterv1.ManagedClusterStatus](
+				clusterClient.ClusterV1().ManagedClusters())
+			if err := patcher.RemoveFinalizer(context.TODO(), c.obj, c.finalizers...); err != nil {
+				if c.expectedError == "" {
+					t.Fatal(err)
+				}
+				assert.EqualError(t, err, c.expectedError, "case %s failed", c.name)
 			}
 			c.validateActions(t, clusterClient.Actions())
 		})

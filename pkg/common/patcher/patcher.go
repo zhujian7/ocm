@@ -22,6 +22,15 @@ type PatchClient[R runtime.Object] interface {
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (R, error)
 }
 
+type GetClient[R runtime.Object] interface {
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (R, error)
+}
+
+type Client[R runtime.Object] interface {
+	PatchClient[R]
+	GetClient[R]
+}
+
 type Patcher[R runtime.Object, Sp any, St any] interface {
 	AddFinalizer(context.Context, R, ...string) (bool, error)
 	RemoveFinalizer(context.Context, R, ...string) error
@@ -38,10 +47,10 @@ type Resource[Sp any, St any] struct {
 }
 
 type patcher[R runtime.Object, Sp any, St any] struct {
-	client PatchClient[R]
+	client Client[R]
 }
 
-func NewPatcher[R runtime.Object, Sp any, St any](client PatchClient[R]) *patcher[R, Sp, St] {
+func NewPatcher[R runtime.Object, Sp any, St any](client Client[R]) *patcher[R, Sp, St] {
 	p := &patcher[R, Sp, St]{
 		client: client,
 	}
@@ -130,6 +139,16 @@ func (p *patcher[R, Sp, St]) RemoveFinalizer(ctx context.Context, object R, fina
 			ctx, accessor.GetName(), types.MergePatchType, patchBytes, metav1.PatchOptions{})
 		if errors.IsNotFound(err) {
 			return nil
+		}
+
+		// If it's a conflict, we need to get the latest version of the object and try again.
+		if errors.IsConflict(err) {
+			klog.V(4).Infof("conflict while removing finalizers %s for %s, retrying", finalizers, accessor.GetName())
+			obj, err := p.client.Get(ctx, accessor.GetName(), metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+			return p.RemoveFinalizer(ctx, obj, finalizers...)
 		}
 		return err
 	}
