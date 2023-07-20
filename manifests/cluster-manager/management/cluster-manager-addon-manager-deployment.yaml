@@ -42,6 +42,7 @@ spec:
       containers:
       - name: addon-manager-controller
         image: {{ .AddOnManagerImage }}
+        imagePullPolicy: IfNotPresent
         args:
           - "/addon"
           - "manager"

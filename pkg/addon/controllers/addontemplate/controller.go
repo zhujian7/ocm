@@ -193,6 +193,7 @@ func (c *addonTemplateController) runController(
 			templateagent.ToAddOnNodePlacementPrivateValues,
 			templateagent.ToAddOnRegistriesPrivateValues,
 		),
+		templateagent.GetAddOnRegistriesPrivateValuesFromClusterAnnotation,
 	)
 	err = mgr.AddAgent(agentAddon)
 	if err != nil {

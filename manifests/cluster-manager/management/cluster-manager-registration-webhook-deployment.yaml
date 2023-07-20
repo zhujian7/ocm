@@ -42,6 +42,7 @@ spec:
       containers:
       - name: {{ .ClusterManagerName }}-webhook
         image: {{ .RegistrationImage }}
+        imagePullPolicy: IfNotPresent
         args:
         - /registration
         - "webhook-server"

@@ -42,6 +42,7 @@ spec:
       containers:
       - name: placement-controller
         image: {{ .PlacementImage }}
+        imagePullPolicy: IfNotPresent
         args:
           - "/placement"
           - "controller"

@@ -1,9 +1,11 @@
 package templateagent
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 
+	"k8s.io/klog/v2"
 	"open-cluster-management.io/addon-framework/pkg/addonfactory"
 	addonapiv1alpha1 "open-cluster-management.io/api/addon/v1alpha1"
 	clusterv1 "open-cluster-management.io/api/cluster/v1"
@@ -153,4 +155,47 @@ func (a *CRDTemplateAgentAddon) sortValueKeys(value addonfactory.Values) []strin
 
 func hubKubeconfigPath() string {
 	return "/managed/hub-kubeconfig/kubeconfig"
+}
+
+const (
+	// ClusterImageRegistriesAnnotation represent the annotation key for image registries, the vale of the annotation
+	// should be a json string like this:
+	//
+	// {
+	//   "registries": [
+	//     {
+	//       "source": "quay.io/ocm",
+	//       "mirrors": "quay.io/open-cluster-management"
+	//     }
+	//   ]
+	// }
+	ClusterImageRegistriesAnnotation = "open-cluster-management.io/image-registries"
+)
+
+func GetAddOnRegistriesPrivateValuesFromClusterAnnotation(
+	cluster *clusterv1.ManagedCluster,
+	addon *addonapiv1alpha1.ManagedClusterAddOn) (addonfactory.Values, error) {
+	values := map[string]interface{}{}
+	annotations := addon.GetAnnotations()
+	if len(annotations[ClusterImageRegistriesAnnotation]) == 0 {
+		return values, nil
+	}
+	type ImageRegistries struct {
+		Registries []addonapiv1alpha1.ImageMirror `json:"registries"`
+	}
+
+	imageRegistries := ImageRegistries{}
+	err := json.Unmarshal([]byte(annotations[ClusterImageRegistriesAnnotation]), &imageRegistries)
+	if err != nil {
+		klog.Errorf("failed to unmarshal the annotation %v,err %v", annotations[ClusterImageRegistriesAnnotation], err)
+		return values, err
+	}
+
+	if len(imageRegistries.Registries) == 0 {
+		return values, nil
+	}
+
+	return addonfactory.Values{
+		RegistriesPrivateValueKey: imageRegistries.Registries,
+	}, nil
 }
