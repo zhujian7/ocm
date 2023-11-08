@@ -16,7 +16,8 @@ type managedClusterAddonConfigurationReconciler struct {
 }
 
 func (d *managedClusterAddonConfigurationReconciler) reconcile(
-	ctx context.Context, cma *addonv1alpha1.ClusterManagementAddOn, graph *configurationGraph) (*addonv1alpha1.ClusterManagementAddOn, reconcileState, error) {
+	ctx context.Context, cma *addonv1alpha1.ClusterManagementAddOn, graph *configurationGraph,
+) (*addonv1alpha1.ClusterManagementAddOn, reconcileState, error) {
 	var errs []error
 
 	for _, addon := range graph.getAddonsToUpdate() {
@@ -55,7 +56,8 @@ func (d *managedClusterAddonConfigurationReconciler) mergeAddonConfig(
 
 			match = true
 			// set LastObservedGeneration to 0 when config name/namespace changes
-			if mergedConfigs[i].DesiredConfig != nil && (mergedConfigs[i].DesiredConfig.ConfigReferent != config.DesiredConfig.ConfigReferent) {
+			if mergedConfigs[i].DesiredConfig != nil &&
+				(mergedConfigs[i].DesiredConfig.ConfigReferent != config.DesiredConfig.ConfigReferent) {
 				mergedConfigs[i].LastObservedGeneration = 0
 			}
 			mergedConfigs[i].ConfigReferent = config.ConfigReferent
