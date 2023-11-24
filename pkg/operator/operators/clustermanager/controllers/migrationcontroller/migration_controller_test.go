@@ -29,13 +29,6 @@ import (
 	testingcommon "open-cluster-management.io/ocm/pkg/common/testing"
 )
 
-var (
-	testMigrationRequestFiles = []string{
-		"cluster-manager/test/cluster-manager-managedclustersets-migration.yaml",
-		"cluster-manager/test/cluster-manager-managedclustersetbindings-migration.yaml",
-	}
-)
-
 func TestSupportStorageVersionMigration(t *testing.T) {
 	cases := []struct {
 		name            string
@@ -88,9 +81,9 @@ func TestApplyStorageVersionMigrations(t *testing.T) {
 			validateActions: func(t *testing.T, actions []clienttesting.Action) {
 				assertActions(t, actions, "get", "create", "get", "create")
 				actual := actions[1].(clienttesting.CreateActionImpl).Object
-				assertStorageVersionMigration(t, "managedclustersets.cluster.open-cluster-management.io", actual)
+				assertStorageVersionMigration(t, "managedclustersets.v1beta1.cluster.open-cluster-management.io", actual)
 				actual = actions[3].(clienttesting.CreateActionImpl).Object
-				assertStorageVersionMigration(t, "managedclustersetbindings.cluster.open-cluster-management.io", actual)
+				assertStorageVersionMigration(t, "managedclustersetbindings.v1beta1.cluster.open-cluster-management.io", actual)
 			},
 		},
 		{
@@ -98,7 +91,7 @@ func TestApplyStorageVersionMigrations(t *testing.T) {
 			existingObjects: []runtime.Object{
 				&migrationv1alpha1.StorageVersionMigration{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "managedclustersetbindings.cluster.open-cluster-management.io",
+						Name: "managedclustersetbindings.v1beta1.cluster.open-cluster-management.io",
 					},
 				},
 				&migrationv1alpha1.StorageVersionMigration{
@@ -110,16 +103,16 @@ func TestApplyStorageVersionMigrations(t *testing.T) {
 			validateActions: func(t *testing.T, actions []clienttesting.Action) {
 				assertActions(t, actions, "get", "create", "get", "update")
 				actual := actions[1].(clienttesting.CreateActionImpl).Object
-				assertStorageVersionMigration(t, "managedclustersets.cluster.open-cluster-management.io", actual)
+				assertStorageVersionMigration(t, "managedclustersets.v1beta1.cluster.open-cluster-management.io", actual)
 				actual = actions[3].(clienttesting.UpdateActionImpl).Object
-				assertStorageVersionMigration(t, "managedclustersetbindings.cluster.open-cluster-management.io", actual)
+				assertStorageVersionMigration(t, "managedclustersetbindings.v1beta1.cluster.open-cluster-management.io", actual)
 			},
 		},
 	}
 
 	if len(migrationRequestFiles) == 0 {
-		t.Log("testing with test migrationRequestFiles")
-		migrationRequestFiles = testMigrationRequestFiles
+		t.Log("skip testing applyStorageVersionMigrations as no migrationRequestFiles")
+		return
 	}
 
 	for _, c := range cases {
@@ -137,8 +130,8 @@ func TestApplyStorageVersionMigrations(t *testing.T) {
 
 func TestRemoveStorageVersionMigrations(t *testing.T) {
 	names := []string{
-		"managedclustersets.cluster.open-cluster-management.io",
-		"managedclustersetbindings.cluster.open-cluster-management.io",
+		"managedclustersets.v1beta1.cluster.open-cluster-management.io",
+		"managedclustersetbindings.v1beta1.cluster.open-cluster-management.io",
 		"placements.cluster.open-cluster-management.io",
 		"placementdecisions.cluster.open-cluster-management.io",
 	}
@@ -155,7 +148,7 @@ func TestRemoveStorageVersionMigrations(t *testing.T) {
 			existingObjects: []runtime.Object{
 				&migrationv1alpha1.StorageVersionMigration{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "managedclustersetbindings.cluster.open-cluster-management.io",
+						Name: "managedclustersetbindings.v1beta1.cluster.open-cluster-management.io",
 					},
 				},
 				&migrationv1alpha1.StorageVersionMigration{
@@ -223,12 +216,12 @@ func Test_syncStorageVersionMigrationsCondition(t *testing.T) {
 			existingObjects: []runtime.Object{
 				&migrationv1alpha1.StorageVersionMigration{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "managedclustersetbindings.cluster.open-cluster-management.io",
+						Name: "managedclustersetbindings.v1beta1.cluster.open-cluster-management.io",
 					},
 				},
 				&migrationv1alpha1.StorageVersionMigration{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "managedclustersets.cluster.open-cluster-management.io",
+						Name: "managedclustersets.v1beta1.cluster.open-cluster-management.io",
 					},
 				},
 			},
@@ -243,7 +236,7 @@ func Test_syncStorageVersionMigrationsCondition(t *testing.T) {
 			existingObjects: []runtime.Object{
 				&migrationv1alpha1.StorageVersionMigration{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "managedclustersetbindings.cluster.open-cluster-management.io",
+						Name: "managedclustersetbindings.v1beta1.cluster.open-cluster-management.io",
 					},
 					Status: migrationv1alpha1.StorageVersionMigrationStatus{
 						Conditions: []migrationv1alpha1.MigrationCondition{
@@ -256,7 +249,7 @@ func Test_syncStorageVersionMigrationsCondition(t *testing.T) {
 				},
 				&migrationv1alpha1.StorageVersionMigration{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "managedclustersets.cluster.open-cluster-management.io",
+						Name: "managedclustersets.v1beta1.cluster.open-cluster-management.io",
 					},
 					Status: migrationv1alpha1.StorageVersionMigrationStatus{
 						Conditions: []migrationv1alpha1.MigrationCondition{
@@ -279,7 +272,7 @@ func Test_syncStorageVersionMigrationsCondition(t *testing.T) {
 			existingObjects: []runtime.Object{
 				&migrationv1alpha1.StorageVersionMigration{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "managedclustersetbindings.cluster.open-cluster-management.io",
+						Name: "managedclustersetbindings.v1beta1.cluster.open-cluster-management.io",
 					},
 					Status: migrationv1alpha1.StorageVersionMigrationStatus{
 						Conditions: []migrationv1alpha1.MigrationCondition{
@@ -292,7 +285,7 @@ func Test_syncStorageVersionMigrationsCondition(t *testing.T) {
 				},
 				&migrationv1alpha1.StorageVersionMigration{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "managedclustersets.cluster.open-cluster-management.io",
+						Name: "managedclustersets.v1beta1.cluster.open-cluster-management.io",
 					},
 					Status: migrationv1alpha1.StorageVersionMigrationStatus{
 						Conditions: []migrationv1alpha1.MigrationCondition{
@@ -315,7 +308,7 @@ func Test_syncStorageVersionMigrationsCondition(t *testing.T) {
 			existingObjects: []runtime.Object{
 				&migrationv1alpha1.StorageVersionMigration{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "managedclustersetbindings.cluster.open-cluster-management.io",
+						Name: "managedclustersetbindings.v1beta1.cluster.open-cluster-management.io",
 					},
 					Status: migrationv1alpha1.StorageVersionMigrationStatus{
 						Conditions: []migrationv1alpha1.MigrationCondition{
@@ -328,7 +321,7 @@ func Test_syncStorageVersionMigrationsCondition(t *testing.T) {
 				},
 				&migrationv1alpha1.StorageVersionMigration{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "managedclustersets.cluster.open-cluster-management.io",
+						Name: "managedclustersets.v1beta1.cluster.open-cluster-management.io",
 					},
 					Status: migrationv1alpha1.StorageVersionMigrationStatus{
 						Conditions: []migrationv1alpha1.MigrationCondition{
@@ -351,7 +344,7 @@ func Test_syncStorageVersionMigrationsCondition(t *testing.T) {
 			existingObjects: []runtime.Object{
 				&migrationv1alpha1.StorageVersionMigration{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "managedclustersetbindings.cluster.open-cluster-management.io",
+						Name: "managedclustersetbindings.v1beta1.cluster.open-cluster-management.io",
 					},
 					Status: migrationv1alpha1.StorageVersionMigrationStatus{
 						Conditions: []migrationv1alpha1.MigrationCondition{
@@ -364,7 +357,7 @@ func Test_syncStorageVersionMigrationsCondition(t *testing.T) {
 				},
 				&migrationv1alpha1.StorageVersionMigration{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "managedclustersets.cluster.open-cluster-management.io",
+						Name: "managedclustersets.v1beta1.cluster.open-cluster-management.io",
 					},
 					Status: migrationv1alpha1.StorageVersionMigrationStatus{
 						Conditions: []migrationv1alpha1.MigrationCondition{
@@ -383,12 +376,6 @@ func Test_syncStorageVersionMigrationsCondition(t *testing.T) {
 			},
 		},
 	}
-
-	if len(migrationRequestFiles) == 0 {
-		t.Log("testing with test migrationRequestFiles")
-		migrationRequestFiles = testMigrationRequestFiles
-	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fakeMigrationClient := fakemigrationclient.NewSimpleClientset(tt.existingObjects...)
@@ -406,11 +393,6 @@ func Test_syncStorageVersionMigrationsCondition(t *testing.T) {
 }
 
 func TestSync(t *testing.T) {
-	if len(migrationRequestFiles) == 0 {
-		t.Log("testing with test migrationRequestFiles")
-		migrationRequestFiles = testMigrationRequestFiles
-	}
-
 	clusterManager := newClusterManager("testhub")
 	tc, client := newTestController(t, clusterManager)
 

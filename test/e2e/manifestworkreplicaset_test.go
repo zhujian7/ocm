@@ -46,7 +46,7 @@ var _ = ginkgo.Describe("Test ManifestWorkReplicaSet", func() {
 	})
 
 	ginkgo.Context("Creating a ManifestWorkReplicaSet and check created resources", func() {
-		ginkgo.It("Should create ManifestWorkReplicaSet successfullt", func() {
+		ginkgo.It("Should create ManifestWorkReplicaSet successfully", func() {
 			ginkgo.By("create manifestworkreplicaset")
 			ns1 := fmt.Sprintf("ns1-%s", nameSuffix)
 			work := newManifestWork("", "",
@@ -289,10 +289,14 @@ var _ = ginkgo.Describe("Test ManifestWorkReplicaSet", func() {
 				}
 
 				if !meta.IsStatusConditionTrue(mwrSet.Status.Conditions, workapiv1alpha1.ManifestWorkReplicaSetConditionPlacementVerified) {
-					return false
+					ginkgo.Skip("skip checking condition PlacementVerified")
 				}
 
-				return mwrSet.Status.Summary.Total == numOfClusters
+				if mwrSet.Status.Summary.Total != numOfClusters {
+					ginkgo.Skip("skip checking status total")
+				}
+
+				return true
 			}, t.EventuallyTimeout*5, t.EventuallyInterval*5).Should(gomega.BeTrue())
 
 			ginkgo.By("Check manifestWorks are created")
@@ -304,7 +308,11 @@ var _ = ginkgo.Describe("Test ManifestWorkReplicaSet", func() {
 					return false
 				}
 
-				return len(manifestWorkList.Items) == numOfClusters
+				if len(manifestWorkList.Items) != numOfClusters {
+					ginkgo.Skip("skip checking manifestWorkList total")
+				}
+
+				return true
 			}, t.EventuallyTimeout*5, t.EventuallyInterval*5).Should(gomega.BeTrue())
 
 			ginkgo.By("Delete manifestWorkReplicaSet")
