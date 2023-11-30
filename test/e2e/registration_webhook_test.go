@@ -247,11 +247,15 @@ var _ = ginkgo.Describe("Admission webhook", func() {
 				gomega.Expect(errors.IsForbidden(err)).Should(gomega.BeTrue())
 
 				// remove the finalizer to truly delete the namespace
-				ns, err := t.HubKubeClient.CoreV1().Namespaces().Get(context.TODO(), clusterName, metav1.GetOptions{})
-				gomega.Expect(err).ToNot(gomega.HaveOccurred())
-				ns.Finalizers = []string{}
-				_, err = t.HubKubeClient.CoreV1().Namespaces().Update(context.TODO(), ns, metav1.UpdateOptions{})
-				gomega.Expect(err).ToNot(gomega.HaveOccurred())
+				gomega.Eventually(func() error {
+					ns, err := t.HubKubeClient.CoreV1().Namespaces().Get(context.TODO(), clusterName, metav1.GetOptions{})
+					if err != nil {
+						return nil
+					}
+					ns.Finalizers = []string{}
+					_, err = t.HubKubeClient.CoreV1().Namespaces().Update(context.TODO(), ns, metav1.UpdateOptions{})
+					return err
+				}, eventuallyTimeout, eventuallyInterval).ShouldNot(gomega.HaveOccurred())
 
 				gomega.Expect(t.CleanupClusterClient(saNamespace, sa)).ToNot(gomega.HaveOccurred())
 			})

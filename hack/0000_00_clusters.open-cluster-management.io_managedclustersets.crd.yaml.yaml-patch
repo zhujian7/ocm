@@ -14,3 +14,7 @@
       conversionReviewVersions:
       - v1beta1
       - v1beta2
+- op: add
+  path: /metadata/labels
+  value:
+    velero.io/exclude-from-backup: "true"
