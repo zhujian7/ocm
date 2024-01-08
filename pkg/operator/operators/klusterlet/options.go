@@ -65,7 +65,7 @@ func (o *Options) RunKlusterletOperator(ctx context.Context, controllerContext *
 
 	hubConfigSecretInformer := newOneTermInformer(helpers.HubKubeConfig)
 	bootstrapConfigSecretInformer := newOneTermInformer(helpers.BootstrapHubKubeConfig)
-	externalConfigSecretInformer := newOneTermInformer(helpers.WorkWebhookSecret)
+	externalConfigSecretInformer := newOneTermInformer(helpers.ExternalManagedKubeConfig)
 
 	secretInformers := map[string]corev1informers.SecretInformer{
 		helpers.HubKubeConfig:             hubConfigSecretInformer.Core().V1().Secrets(),
