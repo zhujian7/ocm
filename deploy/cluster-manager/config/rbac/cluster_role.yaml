@@ -44,7 +44,7 @@ rules:
   verbs: ["create", "get", "list", "update", "watch", "patch", "delete"]
 - apiGroups: ["apps"]
   resources: ["replicasets"]
-  verbs: ["get"]  
+  verbs: ["get"]
 - apiGroups: ["rbac.authorization.k8s.io"]
   resources: ["clusterrolebindings", "rolebindings"]
   verbs: ["create", "get", "list", "update", "watch", "patch", "delete"]
@@ -78,6 +78,9 @@ rules:
 - apiGroups: ["migration.k8s.io"]
   resources: ["storageversionmigrations"]
   verbs: ["create", "get", "list", "update", "watch", "patch", "delete"]
+- apiGroups: ["migration.k8s.io"]
+  resources: ["storageversionmigrations/status"]
+  verbs: ["patch"]
 # Some rbac needed in cluster-manager
 - apiGroups: ["addon.open-cluster-management.io"]
   resources: ["managedclusteraddons", "clustermanagementaddons"]

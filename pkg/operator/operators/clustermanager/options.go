@@ -2,6 +2,7 @@ package clustermanager
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/openshift/library-go/pkg/controller/controllercmd"
@@ -10,6 +11,7 @@ import (
 	"k8s.io/client-go/informers"
 	corev1informers "k8s.io/client-go/informers/core/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/klog/v2"
 
 	operatorclient "open-cluster-management.io/api/client/operator/clientset/versioned"
 	operatorinformer "open-cluster-management.io/api/client/operator/informers/externalversions"
@@ -20,6 +22,7 @@ import (
 	"open-cluster-management.io/ocm/pkg/operator/operators/clustermanager/controllers/crdstatuccontroller"
 	"open-cluster-management.io/ocm/pkg/operator/operators/clustermanager/controllers/migrationcontroller"
 	clustermanagerstatuscontroller "open-cluster-management.io/ocm/pkg/operator/operators/clustermanager/controllers/statuscontroller"
+	"open-cluster-management.io/ocm/pkg/operator/operators/clustermanager/storageversionmigration"
 )
 
 type Options struct {
@@ -28,6 +31,12 @@ type Options struct {
 
 // RunClusterManagerOperator starts a new cluster manager operator
 func (o *Options) RunClusterManagerOperator(ctx context.Context, controllerContext *controllercmd.ControllerContext) error {
+	err := storageversionmigration.MigrationPreCheck(ctx, controllerContext.KubeConfig)
+	if err != nil {
+		return fmt.Errorf("PreCheck Migrations Failed:%v", err)
+	}
+	klog.Info("PreCheck Migrations Succeeded")
+
 	// Build kubclient client and informer for managed cluster
 	kubeClient, err := kubernetes.NewForConfig(controllerContext.KubeConfig)
 	if err != nil {
