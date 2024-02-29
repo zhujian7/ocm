@@ -2,6 +2,7 @@ package addon
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog/v2"
 
 	addonv1alpha1 "open-cluster-management.io/api/addon/v1alpha1"
@@ -213,6 +215,16 @@ func (c *addOnRegistrationController) startRegistration(ctx context.Context, con
 	additonalSecretData := map[string][]byte{}
 	if config.registration.SignerName == certificatesv1.KubeAPIServerClientSignerName {
 		additonalSecretData[clientcert.KubeconfigFile] = c.kubeconfigData
+	} else {
+		// TODO: this is a workaround for issue-10093. it doesn't contains in the future MCE release(2.6+)
+		// Decode CA from kubeconfigData, hash it and store in the additionalSecretData
+		config, err := clientcmd.Load(c.kubeconfigData)
+		if err != nil {
+			klog.Error(err, "Failed to load kubeconfig, skip adding hubHash to additionalSecretData")
+		} else {
+			hash := sha256.Sum256(config.Clusters[config.Contexts[config.CurrentContext].Cluster].CertificateAuthorityData)
+			additonalSecretData["hubHash"] = hash[:]
+		}
 	}
 
 	// build and start a client cert controller
