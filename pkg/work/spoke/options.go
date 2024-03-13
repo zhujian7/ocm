@@ -27,7 +27,7 @@ type WorkloadAgentOptions struct {
 func NewWorkloadAgentOptions() *WorkloadAgentOptions {
 	return &WorkloadAgentOptions{
 		StatusSyncInterval:                     10 * time.Second,
-		AppliedManifestWorkEvictionGracePeriod: 60 * time.Minute,
+		AppliedManifestWorkEvictionGracePeriod: 24 * time.Hour,
 		WorkloadSourceDriver: WorkloadSourceDriver{
 			Type:   KubeDriver,
 			Config: "/spoke/hub-kubeconfig/kubeconfig",

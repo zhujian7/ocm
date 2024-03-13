@@ -43,7 +43,7 @@ type unmanagedAppliedWorkController struct {
 //   - the appliedmanifestwork hub hash does not match the current hub hash of the work agent.
 //
 // One unmanaged appliedmanifestwork will be evicted from the managed cluster after a grace period (by
-// default, 10 minutes), after one appliedmanifestwork is evicted from the managed cluster, its owned
+// default, 24 hours), after one appliedmanifestwork is evicted from the managed cluster, its owned
 // resources will also be evicted from the managed cluster with Kubernetes garbage collection.
 func NewUnManagedAppliedWorkController(
 	recorder events.Recorder,
