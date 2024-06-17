@@ -44,6 +44,7 @@ func NewClientCertForHubController(
 	clientCertSecretNamespace string,
 	clientCertSecretName string,
 	kubeconfigData []byte,
+	additionalSecretDataSensitive bool,
 	spokeSecretInformer corev1informers.SecretInformer,
 	csrControl clientcert.CSRControl,
 	csrExpirationSeconds int32,
@@ -66,6 +67,7 @@ func NewClientCertForHubController(
 			clientcert.AgentNameFile:   []byte(agentName),
 			clientcert.KubeconfigFile:  kubeconfigData,
 		},
+		AdditionalSecretDataSensitive: additionalSecretDataSensitive,
 	}
 
 	var csrExpirationSecondsInCSROption *int32
