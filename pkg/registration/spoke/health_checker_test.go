@@ -159,8 +159,11 @@ func TestBootstrapKubeconfigHealthChecker(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			secretName := defaultSecretName
 			bootstrapKubeconfigSecretName := &secretName
+
+			_, cancel := context.WithCancel(context.Background())
 			hc := &bootstrapKubeconfigHealthChecker{
 				bootstrapKubeconfigSecretName: bootstrapKubeconfigSecretName,
+				cancel:                        cancel,
 			}
 
 			if len(c.secretName) > 0 {

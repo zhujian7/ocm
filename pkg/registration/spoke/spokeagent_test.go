@@ -20,7 +20,8 @@ import (
 )
 
 func TestValidate(t *testing.T) {
-	defaultCompletedOptions := NewSpokeAgentOptions()
+	_, cancel := context.WithCancel(context.Background())
+	defaultCompletedOptions := NewSpokeAgentOptions(cancel)
 	defaultCompletedOptions.BootstrapKubeconfig = "/spoke/bootstrap/kubeconfig"
 
 	cases := []struct {
@@ -184,7 +185,8 @@ func TestHasValidHubClientConfig(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			spokeAgentOptions := NewSpokeAgentOptions()
+			_, cancel := context.WithCancel(context.Background())
+			spokeAgentOptions := NewSpokeAgentOptions(cancel)
 			if c.kubeconfig != nil {
 				testinghelpers.WriteFile(path.Join(tempDir, "kubeconfig"), c.kubeconfig)
 			}

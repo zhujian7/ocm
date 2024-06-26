@@ -1,6 +1,7 @@
 package spoke
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -28,7 +29,7 @@ type SpokeAgentOptions struct {
 	bootstrapKubeconfigHealthChecker *bootstrapKubeconfigHealthChecker
 }
 
-func NewSpokeAgentOptions() *SpokeAgentOptions {
+func NewSpokeAgentOptions(cancel context.CancelFunc) *SpokeAgentOptions {
 	options := &SpokeAgentOptions{
 		BootstrapKubeconfigSecret: "bootstrap-hub-kubeconfig",
 		HubKubeconfigSecret:       "hub-kubeconfig-secret",
@@ -42,6 +43,7 @@ func NewSpokeAgentOptions() *SpokeAgentOptions {
 
 	options.bootstrapKubeconfigHealthChecker = &bootstrapKubeconfigHealthChecker{
 		bootstrapKubeconfigSecretName: &options.BootstrapKubeconfigSecret,
+		cancel:                        cancel,
 	}
 
 	return options
