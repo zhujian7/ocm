@@ -254,6 +254,11 @@ func (o *SpokeAgentConfig) RunSpokeAgentWithSpokeInformers(ctx context.Context,
 		clientCertForHubController := registration.NewClientCertForHubController(
 			o.agentOptions.SpokeClusterName, o.agentOptions.AgentID, o.agentOptions.ComponentNamespace, o.registrationOption.HubKubeconfigSecret,
 			kubeconfigData,
+			// during the upgrading of the registration agent, it may have a chance that the agnets of both the
+			// old version and the new version run at the same time. The kubeconfig in the hub-kubeconfig-secret
+			// may be modified by any agent. Set additionalSecretDataSensitive to true to make sure the
+			// new agent finally take over the kubeconfig in the hub-kubeconfig-secret.
+			true,
 			// store the secret in the cluster where the agent pod runs
 			bootstrapNamespacedManagementKubeInformerFactory.Core().V1().Secrets(),
 			csrControl,
@@ -350,6 +355,7 @@ func (o *SpokeAgentConfig) RunSpokeAgentWithSpokeInformers(ctx context.Context,
 	clientCertForHubController := registration.NewClientCertForHubController(
 		o.agentOptions.SpokeClusterName, o.agentOptions.AgentID, o.agentOptions.ComponentNamespace, o.registrationOption.HubKubeconfigSecret,
 		kubeconfigData,
+		false,
 		namespacedManagementKubeInformerFactory.Core().V1().Secrets(),
 		csrControl,
 		o.registrationOption.ClientCertExpirationSeconds,
