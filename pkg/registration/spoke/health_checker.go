@@ -14,6 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"
 	certutil "k8s.io/client-go/util/cert"
+	"k8s.io/klog/v2"
 )
 
 type clientCertHealthChecker struct {
@@ -102,6 +103,10 @@ func (hc *bootstrapKubeconfigHealthChecker) OnUpdate(oldObj, newObj interface{})
 
 	if !reflect.DeepEqual(newSecret.Data, oldSecret.Data) {
 		hc.changed = true
+		// Exit immediately if the bootstrap kubeconfig changes. Otherwise, in the backup restore scenario,
+		// the work agent may resync a wrong bootstrap kubeconfig from the cache to overwrite the restored one.
+		klog.Info("The bootstrap kubeconfig changes and rebootstrap is required. Exiting...")
+		os.Exit(0)
 	}
 }
 

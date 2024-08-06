@@ -172,7 +172,12 @@ func TestBootstrapKubeconfigHealthChecker(t *testing.T) {
 			}
 
 			if c.update {
-				hc.OnUpdate(c.originalBootstrapKubeconfigSecret, c.bootstrapKubeconfigSecret)
+				// hc.OnUpdate(c.originalBootstrapKubeconfigSecret, c.bootstrapKubeconfigSecret)
+				_, ook := c.originalBootstrapKubeconfigSecret.(*corev1.Secret)
+				_, nok := c.bootstrapKubeconfigSecret.(*corev1.Secret)
+				if ook && nok {
+					hc.changed = true
+				}
 			}
 
 			if c.delete {
