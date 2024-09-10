@@ -20,6 +20,9 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     steps:
+      - name: add permisson to docker.sock
+        run: sudo chown runner:docker /var/run/docker.sock
+        if: ${{ env.ACT }} # this step only runs locally when using the https://github.com/nektos/act to debug the e2e
       - name: Checkout
         uses: actions/checkout@v3
       - name: Setup Go
@@ -49,6 +52,9 @@ jobs:
   e2e-hosted:
     runs-on: ubuntu-latest
     steps:
+      - name: add permisson to docker.sock
+        run: sudo chown runner:docker /var/run/docker.sock
+        if: ${{ env.ACT }} # this step only runs locally when using the https://github.com/nektos/act to debug the e2e
       - name: Checkout
         uses: actions/checkout@v3
       - name: Setup Go
@@ -78,6 +84,9 @@ jobs:
   e2e-singleton:
     runs-on: ubuntu-latest
     steps:
+      - name: add permisson to docker.sock
+        run: sudo chown runner:docker /var/run/docker.sock
+        if: ${{ env.ACT }} # this step only runs locally when using the https://github.com/nektos/act to debug the e2e
       - name: Checkout
         uses: actions/checkout@v3
       - name: Setup Go

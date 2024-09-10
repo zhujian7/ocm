@@ -22,15 +22,21 @@ import (
 	"k8s.io/utils/pointer"
 )
 
-type TokenGetterFunc func() ([]byte, []byte, error)
+type TokenGetterFunc func() (token []byte, expiration []byte, additionalData map[string][]byte, err error)
 
 // SATokenGetter get the saToken of target sa. If there is not secrets in the sa, use the tokenrequest to get a token.
 func SATokenGetter(ctx context.Context, saName, saNamespace string, saClient kubernetes.Interface) TokenGetterFunc {
-	return func() ([]byte, []byte, error) {
+	return func() ([]byte, []byte, map[string][]byte, error) {
 		// get the service account
 		sa, err := saClient.CoreV1().ServiceAccounts(saNamespace).Get(ctx, saName, metav1.GetOptions{})
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
+		}
+
+		additionalData := map[string][]byte{
+			"serviceaccount_namespace": []byte(saNamespace),
+			"serviceaccount_name":      []byte(saName),
+			"serviceaccount_uid":       []byte(sa.UID),
 		}
 
 		for _, secret := range sa.Secrets {
@@ -40,7 +46,7 @@ func SATokenGetter(ctx context.Context, saName, saNamespace string, saClient kub
 			// get the token secret
 			tokenSecret, err := saClient.CoreV1().Secrets(saNamespace).Get(ctx, tokenSecretName, metav1.GetOptions{})
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			}
 
 			if tokenSecret.Type != corev1.SecretTypeServiceAccountToken {
@@ -52,7 +58,7 @@ func SATokenGetter(ctx context.Context, saName, saNamespace string, saClient kub
 				continue
 			}
 
-			return saToken, nil, nil
+			return saToken, nil, additionalData, nil
 		}
 
 		// 8640 hour
@@ -63,34 +69,13 @@ func SATokenGetter(ctx context.Context, saName, saNamespace string, saClient kub
 				},
 			}, metav1.CreateOptions{})
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, additionalData, err
 		}
 		expiration, err := tr.Status.ExpirationTimestamp.MarshalText()
 		if err != nil {
-			return nil, nil, nil
+			return nil, nil, additionalData, nil
 		}
-		return []byte(tr.Status.Token), expiration, nil
-	}
-}
-
-// SATokenCreater create the saToken of target sa.
-func SATokenCreater(ctx context.Context, saName, saNamespace string, saClient kubernetes.Interface) TokenGetterFunc {
-	return func() ([]byte, []byte, error) {
-		// 8640 hour
-		tr, err := saClient.CoreV1().ServiceAccounts(saNamespace).
-			CreateToken(ctx, saName, &authv1.TokenRequest{
-				Spec: authv1.TokenRequestSpec{
-					ExpirationSeconds: pointer.Int64(8640 * 3600),
-				},
-			}, metav1.CreateOptions{})
-		if err != nil {
-			return nil, nil, err
-		}
-		expiration, err := tr.Status.ExpirationTimestamp.MarshalText()
-		if err != nil {
-			return nil, nil, nil
-		}
-		return []byte(tr.Status.Token), expiration, nil
+		return []byte(tr.Status.Token), expiration, additionalData, nil
 	}
 }
 
@@ -106,14 +91,14 @@ func SyncKubeConfigSecret(ctx context.Context, secretName, secretNamespace, kube
 		return err
 	}
 
-	if tokenValid(secret) && clusterInfoNotChanged(secret, templateKubeconfig) {
+	if tokenValid(secret, tokenGetter) && clusterInfoNotChanged(secret, templateKubeconfig) {
 		return nil
 	}
 
 	return applyKubeconfigSecret(ctx, templateKubeconfig, secretName, secretNamespace, kubeconfigPath, secretClient, tokenGetter, recorder)
 }
 
-func tokenValid(secret *corev1.Secret) bool {
+func tokenValid(secret *corev1.Secret, tokenGetter TokenGetterFunc) bool {
 	_, tokenFound := secret.Data["token"]
 	expiration, expirationFound := secret.Data["expiration"]
 
@@ -131,6 +116,17 @@ func tokenValid(secret *corev1.Secret) bool {
 		refreshThreshold := 8640 * time.Hour / 5
 		lifetime := expirationTime.Sub(now.Time)
 		if lifetime < refreshThreshold {
+			return false
+		}
+	}
+
+	_, _, additionalData, err := tokenGetter()
+	if err != nil {
+		return false
+	}
+
+	for k, v := range additionalData {
+		if !bytes.Equal(secret.Data[k], v) {
 			return false
 		}
 	}
@@ -183,7 +179,7 @@ func applyKubeconfigSecret(ctx context.Context, templateKubeconfig *rest.Config,
 	kubeconfigPath string, secretClient coreclientv1.SecretsGetter, tokenGetter TokenGetterFunc,
 	recorder events.Recorder) error {
 
-	token, expiration, err := tokenGetter()
+	token, expiration, additionalData, err := tokenGetter()
 	if err != nil {
 		return err
 	}
@@ -229,6 +225,10 @@ func applyKubeconfigSecret(ctx context.Context, templateKubeconfig *rest.Config,
 
 	if expiration != nil {
 		secret.Data["expiration"] = expiration
+	}
+
+	for k, v := range additionalData {
+		secret.Data[k] = v
 	}
 
 	_, _, err = resourceapply.ApplySecret(ctx, secretClient, recorder, secret)
