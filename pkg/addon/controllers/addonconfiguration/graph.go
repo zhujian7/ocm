@@ -297,6 +297,7 @@ func (n *installStrategyNode) addNode(addon *addonv1alpha1.ManagedClusterAddOn) 
 		n.children[addon.Namespace].desiredConfigs = n.children[addon.Namespace].desiredConfigs.copy()
 		// TODO we should also filter out the configs which are not supported configs.
 		for _, config := range addon.Spec.Configs {
+			// go through mca spec configs update the desired configs
 			n.children[addon.Namespace].desiredConfigs[config.ConfigGroupResource] = addonv1alpha1.ConfigReference{
 				ConfigGroupResource: config.ConfigGroupResource,
 				ConfigReferent:      config.ConfigReferent,
@@ -304,11 +305,17 @@ func (n *installStrategyNode) addNode(addon *addonv1alpha1.ManagedClusterAddOn) 
 					ConfigReferent: config.ConfigReferent,
 				},
 			}
-			// copy the spechash from mca status
+
+			// go through mca spec configs and status, and copy the specHash if they match
 			for _, configRef := range addon.Status.ConfigReferences {
 				if configRef.DesiredConfig == nil {
 					continue
 				}
+				// compare the ConfigGroupResource and ConfigReferent
+				if configRef.ConfigGroupResource != config.ConfigGroupResource || configRef.DesiredConfig.ConfigReferent != config.ConfigReferent {
+					continue
+				}
+				// copy the spec hash to desired configs
 				nodeDesiredConfig, ok := n.children[addon.Namespace].desiredConfigs[configRef.ConfigGroupResource]
 				if ok && (nodeDesiredConfig.DesiredConfig.ConfigReferent == configRef.DesiredConfig.ConfigReferent) {
 					nodeDesiredConfig.DesiredConfig.SpecHash = configRef.DesiredConfig.SpecHash
