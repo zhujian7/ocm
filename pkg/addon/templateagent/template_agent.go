@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/openshift/library-go/pkg/operator/events"
 	"github.com/valyala/fasttemplate"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -57,6 +58,7 @@ type CRDTemplateAgentAddon struct {
 	rolebindingLister   rbacv1lister.RoleBindingLister
 	addonName           string
 	agentName           string
+	eventRecorder       events.Recorder
 }
 
 // NewCRDTemplateAgentAddon creates a CRDTemplateAgentAddon instance
@@ -67,6 +69,7 @@ func NewCRDTemplateAgentAddon(
 	addonClient addonv1alpha1client.Interface,
 	addonInformers addoninformers.SharedInformerFactory,
 	rolebindingLister rbacv1lister.RoleBindingLister,
+	recorder events.Recorder,
 	getValuesFuncs ...addonfactory.GetValuesFunc,
 ) *CRDTemplateAgentAddon {
 
@@ -82,6 +85,7 @@ func NewCRDTemplateAgentAddon(
 		rolebindingLister:   rolebindingLister,
 		addonName:           addonName,
 		agentName:           agentName,
+		eventRecorder:       recorder,
 	}
 
 	return a
