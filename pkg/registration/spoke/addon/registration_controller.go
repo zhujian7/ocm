@@ -243,8 +243,13 @@ func (c *addOnRegistrationController) startRegistration(ctx context.Context, con
 
 	controllerName := fmt.Sprintf("ClientCertController@addon:%s:signer:%s", config.addOnName, config.registration.SignerName)
 	statusUpdater := c.generateStatusUpdate(c.clusterName, config.addOnName)
+
+	additionalSecretData := map[string][]byte{}
+	if len(config.AdditionalSecretData) > 0 {
+		additionalSecretData["user-defined-data"] = []byte(config.AdditionalSecretData)
+	}
 	secretController := register.NewSecretController(
-		secretOption, csrOption, driver, statusUpdater, c.recorder, controllerName)
+		secretOption, csrOption, driver, statusUpdater, c.recorder, controllerName, additionalSecretData)
 
 	go kubeInformerFactory.Start(ctx.Done())
 	go secretController.Run(ctx, 1)

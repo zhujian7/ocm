@@ -35,6 +35,7 @@ type registrationConfig struct {
 type addonInstallOption struct {
 	InstallationNamespace             string `json:"installationNamespace"`
 	AgentRunningOutsideManagedCluster bool   `json:"agentRunningOutsideManagedCluster"`
+	AdditionalSecretData              string `json:"additionalSecretData"`
 }
 
 func (c *registrationConfig) x509Subject(clusterName, agentName string) *pkix.Name {
@@ -72,6 +73,10 @@ func getAddOnInstallationNamespace(addOn *addonv1alpha1.ManagedClusterAddOn) str
 	return installationNamespace
 }
 
+func getAddOnAdditionalSecretData(addOn *addonv1alpha1.ManagedClusterAddOn) string {
+	return addOn.Annotations["addon.open-cluster-management.io/additional-secret-data"]
+}
+
 // isAddonRunningOutsideManagedCluster returns whether the addon agent is running on the managed cluster
 func isAddonRunningOutsideManagedCluster(addOn *addonv1alpha1.ManagedClusterAddOn) bool {
 	hostingCluster, ok := addOn.Annotations[addonv1alpha1.HostingClusterNameAnnotationKey]
@@ -92,6 +97,7 @@ func getRegistrationConfigs(addOn *addonv1alpha1.ManagedClusterAddOn) (map[strin
 			addonInstallOption: addonInstallOption{
 				AgentRunningOutsideManagedCluster: isAddonRunningOutsideManagedCluster(addOn),
 				InstallationNamespace:             getAddOnInstallationNamespace(addOn),
+				AdditionalSecretData:              getAddOnAdditionalSecretData(addOn),
 			},
 			registration: registration,
 		}

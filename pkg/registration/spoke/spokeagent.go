@@ -328,7 +328,8 @@ func (o *SpokeAgentConfig) RunSpokeAgentWithSpokeInformers(ctx context.Context,
 		controllerName := fmt.Sprintf("BootstrapController@cluster:%s", o.agentOptions.SpokeClusterName)
 		bootstrapCtx, stopBootstrap := context.WithCancel(ctx)
 		secretController := register.NewSecretController(
-			secretOption, registrationAuthOption, o.driver, register.GenerateBootstrapStatusUpdater(), recorder, controllerName)
+			secretOption, registrationAuthOption, o.driver, register.GenerateBootstrapStatusUpdater(),
+			recorder, controllerName, nil)
 
 		go bootstrapInformerFactory.Start(bootstrapCtx.Done())
 		go secretController.Run(bootstrapCtx, 1)
@@ -418,7 +419,7 @@ func (o *SpokeAgentConfig) RunSpokeAgentWithSpokeInformers(ctx context.Context,
 		secretOption, registrationAuthOption, o.driver, register.GenerateStatusUpdater(
 			hubClusterClient,
 			hubClusterInformerFactory.Cluster().V1().ManagedClusters().Lister(),
-			o.agentOptions.SpokeClusterName), recorder, controllerName)
+			o.agentOptions.SpokeClusterName), recorder, controllerName, nil)
 
 	// create ManagedClusterLeaseController to keep the spoke cluster heartbeat
 	managedClusterLeaseController := lease.NewManagedClusterLeaseController(

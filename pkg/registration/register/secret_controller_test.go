@@ -141,7 +141,7 @@ func TestSync(t *testing.T) {
 			c.option.ManagementSecretInformer = informerFactory.Core().V1().Secrets().Informer()
 			updater := &fakeStatusUpdater{}
 			ctrl := NewSecretController(
-				c.option, nil, c.driver, updater.update, syncCtx.Recorder(), "test")
+				c.option, nil, c.driver, updater.update, syncCtx.Recorder(), "test", nil)
 			err := ctrl.Sync(context.Background(), syncCtx)
 			if err != nil {
 				t.Fatal(err)

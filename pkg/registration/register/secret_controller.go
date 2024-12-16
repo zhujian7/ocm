@@ -39,8 +39,11 @@ func NewSecretController(
 	statusUpdater StatusUpdateFunc,
 	recorder events.Recorder,
 	controllerName string,
+	additionalSecretData map[string][]byte,
 ) factory.Controller {
-	additionalSecretData := map[string][]byte{}
+	if additionalSecretData == nil {
+		additionalSecretData = map[string][]byte{}
+	}
 	if secretOption.BootStrapKubeConfig != nil {
 		kubeConfigTemplate, err := BaseKubeConfigFromBootStrap(secretOption.BootStrapKubeConfig)
 		if err != nil {
