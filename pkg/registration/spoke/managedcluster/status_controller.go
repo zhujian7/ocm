@@ -7,6 +7,7 @@ import (
 
 	"github.com/openshift/library-go/pkg/controller/factory"
 	"github.com/openshift/library-go/pkg/operator/events"
+	meta "k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/discovery"
 	corev1informers "k8s.io/client-go/informers/core/v1"
@@ -26,6 +27,7 @@ type managedClusterStatusController struct {
 	reconcilers      []statusReconcile
 	patcher          patcher.Patcher[*clusterv1.ManagedCluster, clusterv1.ManagedClusterSpec, clusterv1.ManagedClusterStatus]
 	hubClusterLister clusterv1listers.ManagedClusterLister
+	recorder         events.Recorder
 }
 
 type statusReconcile interface {
@@ -88,6 +90,7 @@ func newManagedClusterStatusController(
 			&claimReconcile{claimLister: claimInformer.Lister(), recorder: recorder, maxCustomClusterClaims: maxCustomClusterClaims},
 		},
 		hubClusterLister: hubClusterInformer.Lister(),
+		recorder:         recorder,
 	}
 }
 
@@ -112,7 +115,15 @@ func (c *managedClusterStatusController) sync(ctx context.Context, syncCtx facto
 		}
 	}
 
-	if _, err := c.patcher.PatchStatus(ctx, newCluster, newCluster.Status, cluster.Status); err != nil {
+	// check if managedcluster's clock is out of sync, if so, the agent will not be able to update the status of managed cluster.
+	outOfSynced := meta.IsStatusConditionFalse(newCluster.Status.Conditions, clusterv1.ManagedClusterConditionClockSynced)
+	if outOfSynced {
+		c.recorder.Eventf("ClockOutOfSync", "The managed cluster's clock is out of sync, the agent will not be able to update the status of managed cluster.")
+		return fmt.Errorf("the managed cluster's clock is out of sync, the agent will not be able to update the status of managed cluster.")
+	}
+
+	_, err = c.patcher.PatchStatus(ctx, newCluster, newCluster.Status, cluster.Status)
+	if err != nil {
 		errs = append(errs, err)
 	}
 
