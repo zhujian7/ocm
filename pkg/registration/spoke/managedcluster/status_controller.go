@@ -31,7 +31,6 @@ type managedClusterStatusController struct {
 	patcher          patcher.Patcher[*clusterv1.ManagedCluster, clusterv1.ManagedClusterSpec, clusterv1.ManagedClusterStatus]
 	hubClusterLister clusterv1listers.ManagedClusterLister
 	hubEventRecorder kevents.EventRecorder
-	recorder         events.Recorder
 }
 
 type statusReconcile interface {
@@ -98,7 +97,6 @@ func newManagedClusterStatusController(
 		},
 		hubClusterLister: hubClusterInformer.Lister(),
 		hubEventRecorder: hubEventRecorder,
-		recorder:         recorder,
 	}
 }
 
@@ -121,13 +119,6 @@ func (c *managedClusterStatusController) sync(ctx context.Context, syncCtx facto
 		if state == reconcileStop {
 			break
 		}
-	}
-
-	// check if managedcluster's clock is out of sync, if so, the agent will not be able to update the status of managed cluster.
-	outOfSynced := meta.IsStatusConditionFalse(newCluster.Status.Conditions, clusterv1.ManagedClusterConditionClockSynced)
-	if outOfSynced {
-		c.recorder.Eventf("ClockOutOfSync", "The managed cluster's clock is out of sync, the agent will not be able to update the status of managed cluster.")
-		return fmt.Errorf("the managed cluster's clock is out of sync, the agent will not be able to update the status of managed cluster.")
 	}
 
 	changed, err := c.patcher.PatchStatus(ctx, newCluster, newCluster.Status, cluster.Status)
