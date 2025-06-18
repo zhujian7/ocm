@@ -115,7 +115,6 @@ func (d *deployReconciler) reconcile(ctx context.Context, mwrSet *workapiv1alpha
 
 				_, err = d.workApplier.Apply(ctx, mw)
 				if err != nil {
-					fmt.Printf("err is %v\n", err)
 					errs = append(errs, err)
 					continue
 				}

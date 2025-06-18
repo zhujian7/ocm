@@ -2,7 +2,7 @@ package main
 
 import (
 	goflag "flag"
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -36,7 +36,7 @@ func main() {
 
 	command := newRegistrationCommand()
 	if err := command.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
+		log.Printf("command failed: %v\n", err)
 		os.Exit(1) //nolint:gocritic
 	}
 }
@@ -47,7 +47,7 @@ func newRegistrationCommand() *cobra.Command {
 		Short: "Spoke Cluster Registration",
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
+				log.Printf("help command failed: %v\n", err)
 			}
 			os.Exit(1)
 		},

@@ -2,7 +2,7 @@ package main
 
 import (
 	goflag "flag"
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -24,7 +24,7 @@ func main() {
 
 	command := newAddonCommand()
 	if err := command.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
+		log.Printf("command failed: %v\n", err)
 		os.Exit(1) //nolint:gocritic
 	}
 }
