@@ -1,8 +1,8 @@
 # cel.dev/expr v0.19.1
 ## explicit; go 1.21.1
 cel.dev/expr
-# cloud.google.com/go/compute/metadata v0.5.0
-## explicit; go 1.20
+# cloud.google.com/go/compute/metadata v0.5.2
+## explicit; go 1.21
 cloud.google.com/go/compute/metadata
 # dario.cat/mergo v1.0.1
 ## explicit; go 1.13
@@ -20,8 +20,8 @@ github.com/Masterminds/semver/v3
 # github.com/Masterminds/sprig/v3 v3.3.0
 ## explicit; go 1.21
 github.com/Masterminds/sprig/v3
-# github.com/Microsoft/hcsshim v0.12.9
-## explicit; go 1.22
+# github.com/Microsoft/hcsshim v0.13.0
+## explicit; go 1.23.0
 # github.com/NYTimes/gziphandler v1.1.1
 ## explicit; go 1.11
 github.com/NYTimes/gziphandler
@@ -193,7 +193,7 @@ github.com/cyphar/filepath-securejoin
 # github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 ## explicit
 github.com/davecgh/go-spew/spew
-# github.com/docker/docker v27.1.2+incompatible
+# github.com/docker/docker v27.3.1+incompatible
 ## explicit
 # github.com/eclipse/paho.golang v0.21.0
 ## explicit; go 1.21
@@ -823,6 +823,8 @@ golang.org/x/tools/internal/astutil/edge
 # gomodules.xyz/jsonpatch/v2 v2.4.0
 ## explicit; go 1.20
 gomodules.xyz/jsonpatch/v2
+# google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de
+## explicit; go 1.19
 # google.golang.org/genproto/googleapis/api v0.0.0-20241209162323-e6fa225c2576
 ## explicit; go 1.21
 google.golang.org/genproto/googleapis/api
@@ -833,7 +835,7 @@ google.golang.org/genproto/googleapis/api/httpbody
 ## explicit; go 1.21
 google.golang.org/genproto/googleapis/rpc/errdetails
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.68.1
+# google.golang.org/grpc v1.69.0
 ## explicit; go 1.22
 google.golang.org/grpc
 google.golang.org/grpc/attributes
