@@ -13,7 +13,7 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/google/cel-go v0.22.0
 	github.com/google/go-cmp v0.7.0
-	github.com/mochi-mqtt/server/v2 v2.6.6
+	github.com/mochi-mqtt/server/v2 v2.7.9
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.36.3
 	github.com/openshift/api v0.0.0-20250124212313-a770960d61e0
