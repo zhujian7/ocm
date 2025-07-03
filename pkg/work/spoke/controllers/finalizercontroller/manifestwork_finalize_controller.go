@@ -9,6 +9,7 @@ import (
 	"github.com/openshift/library-go/pkg/operator/events"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog/v2"
 
@@ -52,6 +53,37 @@ func NewManifestWorkFinalizeController(
 		hubHash:                   hubHash,
 		rateLimiter:               workqueue.NewItemExponentialFailureRateLimiter(5*time.Millisecond, 1000*time.Second),
 	}
+	manifestWorkInformer.Informer().AddEventHandler(&cache.ResourceEventHandlerFuncs{
+		// AddFunc: func(obj interface{}) {
+		// 	manifestWork, ok := obj.(*workapiv1.ManifestWork)
+		// 	if !ok {
+		// 		return
+		// 	}
+		// 	if !manifestWork.DeletionTimestamp.IsZero() {
+
+		// 	}
+		// },
+		// UpdateFunc: func(oldObj, newObj interface{}) {
+		// 	oldManifestWork, ok := oldObj.(*workapiv1.ManifestWork)
+		// 	if !ok {
+		// 		return
+		// 	}
+		// 	newManifestWork, ok := newObj.(*workapiv1.ManifestWork)
+		// 	if !ok {
+		// 		return
+		// 	}
+		// 	if oldManifestWork.DeletionTimestamp.IsZero() && !newManifestWork.DeletionTimestamp.IsZero() {
+		// 		klog.Infof("ManifestWork %q is terminating", newManifestWork.Name)
+		// 	}
+		// },
+		DeleteFunc: func(obj interface{}) {
+			manifestWork, ok := obj.(*workapiv1.ManifestWork)
+			if !ok {
+				return
+			}
+			klog.Infof("!!!!!!! ManifestWork %q is deleted, terminating: %v", manifestWork.Name, manifestWork.DeletionTimestamp)
+		},
+	})
 
 	return factory.New().
 		WithInformersQueueKeysFunc(queue.QueueKeyByMetaName, manifestWorkInformer.Informer()).
@@ -65,10 +97,10 @@ func NewManifestWorkFinalizeController(
 func (m *ManifestWorkFinalizeController) sync(ctx context.Context, controllerContext factory.SyncContext) error {
 	manifestWorkName := controllerContext.QueueKey()
 	appliedManifestWorkName := fmt.Sprintf("%s-%s", m.hubHash, manifestWorkName)
-	klog.V(5).Infof("Reconciling ManifestWork %q", manifestWorkName)
+	klog.Infof("====== Reconciling ManifestWork %q", manifestWorkName)
 
 	manifestWork, err := m.manifestWorkLister.Get(manifestWorkName)
-
+	klog.Infof("------ manifestwork %s terminating: %v", manifestWorkName, manifestWork.DeletionTimestamp)
 	// Delete appliedmanifestwork if relating manfiestwork is being deleted
 	switch {
 	case errors.IsNotFound(err):
@@ -77,6 +109,7 @@ func (m *ManifestWorkFinalizeController) sync(ctx context.Context, controllerCon
 	case err != nil:
 		return err
 	case !manifestWork.DeletionTimestamp.IsZero():
+		klog.Infof("Start to delete appliedmanifestwork %q, manifestwork name: %q", appliedManifestWorkName, manifestWorkName)
 		err := m.deleteAppliedManifestWork(ctx, appliedManifestWorkName)
 		if err != nil {
 			return err
