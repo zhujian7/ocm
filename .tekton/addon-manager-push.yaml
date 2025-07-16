@@ -57,7 +57,7 @@ spec:
             PipelineRun name: $(context.pipelineRun.name) id: $(context.pipelineRun.uid) failed, see details:
             $(params.konflux-ui-base-url)/ns/$(context.pipelineRun.namespace)/applications/$(params.konflux-application-name)/pipelineruns/$(context.pipelineRun.name)
         - name: secret-name
-          value: slack-test-notify-secret  # name of secret in the your namespace which contains slack web-hook URL under key specified in 'key-name' parameter below
+          value: slack-acm-server-foundation-notify-secret  # name of secret in the your namespace which contains slack web-hook URL under key specified in 'key-name' parameter below
         - name: key-name
           value: server-foundation-team
       taskRef:
