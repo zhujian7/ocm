@@ -26,14 +26,14 @@ spec:
     value: quay.io/redhat-user-workloads/jiazhu-tenant/addon-manager:{{revision}}
   - name: dockerfile
     value: build/Dockerfile.addon
-  # - name: send-slack-notification
-  #   value: true
-  # - name: konflux-application-name
-  #   value: ocm-test
-  # - name: slack-webhook-url-secret-name
-  #   value: slack-test-notify-secret
-  # - name: slack-webhook-url-secret-key
-  #   value: server-foundation-team
+  - name: send-slack-notification
+    value: true
+  - name: konflux-application-name
+    value: ocm-test
+  - name: slack-webhook-url-secret-name
+    value: slack-test-notify-secret
+  - name: slack-webhook-url-secret-key
+    value: server-foundation-team
   pipelineSpec:
     description: |
       This pipeline is ideal for building container images from a Containerfile while maintaining trust after pipeline customization.
@@ -58,9 +58,11 @@ spec:
       params:
         - name: message
           value: |
-            PipelineRun name: $(context.pipelineRun.name) id: $(context.pipelineRun.uid) failed,
-            git source: $(params.git-url)/commit/$(params.revision), output image: $(params.output-image), see details:
-            https://konflux-ui.apps.stone-prd-rh01.pg1f.p1.openshiftapps.com/ns/$(context.pipelineRun.namespace)/applications/$(params.konflux-application-name)/pipelineruns/$(context.pipelineRun.name)
+            PipelineRun name: $(context.pipelineRun.name) id: $(context.pipelineRun.uid) failed:
+            - git source: $(params.git-url)/commit/$(params.revision)
+            - target branch: $(params.git-url)/tree/{{target_branch}}
+            - output image: $(params.output-image)
+            - see details: https://konflux-ui.apps.stone-prd-rh01.pg1f.p1.openshiftapps.com/ns/$(context.pipelineRun.namespace)/applications/$(params.konflux-application-name)/pipelineruns/$(context.pipelineRun.name)
         - name: secret-name
           value: $(params.slack-webhook-url-secret-name)
         - name: key-name
