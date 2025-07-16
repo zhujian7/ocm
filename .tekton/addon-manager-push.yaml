@@ -26,10 +26,14 @@ spec:
     value: quay.io/redhat-user-workloads/jiazhu-tenant/addon-manager:{{revision}}
   - name: dockerfile
     value: build/Dockerfile.addon
-  - name: konflux-ui-base-url
-    value: https://konflux-ui.apps.stone-prd-rh01.pg1f.p1.openshiftapps.com
+  - name: send-slack-notification
+    value: true
   - name: konflux-application-name
     value: ocm-test
+  - name: slack-webhook-url-secret-name
+    value: slack-test-notify-secret
+  - name: slack-webhook-url-secret-key
+    value: server-foundation-team
   pipelineSpec:
     description: |
       This pipeline is ideal for building container images from a Containerfile while maintaining trust after pipeline customization.
@@ -54,12 +58,13 @@ spec:
       params:
         - name: message
           value: |
-            PipelineRun name: $(context.pipelineRun.name) id: $(context.pipelineRun.uid) failed, see details:
-            $(params.konflux-ui-base-url)/ns/$(context.pipelineRun.namespace)/applications/$(params.konflux-application-name)/pipelineruns/$(context.pipelineRun.name)
+            PipelineRun name: $(context.pipelineRun.name) id: $(context.pipelineRun.uid) failed,
+            git source: $(params.git-url), revision: $(params.revision), output image: $(params.output-image), see details:
+            https://konflux-ui.apps.stone-prd-rh01.pg1f.p1.openshiftapps.com/ns/$(context.pipelineRun.namespace)/applications/$(params.konflux-application-name)/pipelineruns/$(context.pipelineRun.name)
         - name: secret-name
-          value: slack-acm-server-foundation-notify-secret  # name of secret in the your namespace which contains slack web-hook URL under key specified in 'key-name' parameter below
+          value: $(params.slack-webhook-url-secret-name)
         - name: key-name
-          value: server-foundation-team
+          value: $(params.slack-webhook-url-secret-key)
       taskRef:
         params:
         - name: bundle
@@ -72,7 +77,12 @@ spec:
       when:
         - input: $(tasks.status)
           operator: in
-          values: ["Failed"]
+          values:
+          - "Failed"
+        - input: $(params.send-slack-notification)
+          operator: in
+          values:
+          - "true"
     params:
     - description: Source Repository URL
       name: git-url
@@ -135,6 +145,20 @@ spec:
       description: Whether to enable privileged mode, should be used only with remote
         VMs
       name: privileged-nested
+      type: string
+    - default: "false"
+      description: Whether to send slack notification when the pipeline run failed
+      name: send-slack-notification
+      type: string
+    - name: konflux-application-name
+      description: The name of the application in Konflux, this is required when send-slack-notification is true
+      type: string
+    - name: slack-webhook-url-secret-name
+      description: The name of the secret in the namespace which contains the slack webhook url, this is required when send-slack-notification is true
+      type: string
+    - default: "slack-webhook-url"
+      name: slack-webhook-url-secret-key
+      description: The key of the slack webhook url in the secret, this is required when send-slack-notification is true
       type: string
     results:
     - description: ""
