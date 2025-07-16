@@ -26,14 +26,6 @@ spec:
     value: quay.io/redhat-user-workloads/jiazhu-tenant/addon-manager:{{revision}}
   - name: dockerfile
     value: build/Dockerfile.addon
-  - name: send-slack-notification
-    value: true
-  - name: konflux-application-name
-    value: ocm-test
-  - name: slack-webhook-url-secret-name
-    value: slack-test-notify-secret
-  - name: slack-webhook-url-secret-key
-    value: server-foundation-team
   pipelineSpec:
     description: |
       This pipeline is ideal for building container images from a Containerfile while maintaining trust after pipeline customization.
