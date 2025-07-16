@@ -26,6 +26,10 @@ spec:
     value: quay.io/redhat-user-workloads/jiazhu-tenant/addon-manager:{{revision}}
   - name: dockerfile
     value: build/Dockerfile.addon
+  - name: konflux-ui-base-url
+    value: https://konflux-ui.apps.stone-prd-rh01.pg1f.p1.openshiftapps.com
+  - name: konflux-application-name
+    value: ocm-test
   pipelineSpec:
     description: |
       This pipeline is ideal for building container images from a Containerfile while maintaining trust after pipeline customization.
@@ -49,7 +53,9 @@ spec:
     - name: slack-webhook-notification
       params:
         - name: message
-          value: PipelineRun $(context.pipelineRun.name) failed
+          value: |
+            PipelineRun name: $(context.pipelineRun.name) id: $(context.pipelineRun.uid) failed, see details:
+            $(params.konflux-ui-base-url)/ns/$(context.pipelineRun.namespace)/applications/$(params.konflux-application-name)/pipelineruns/$(context.pipelineRun.name)
         - name: secret-name
           value: slack-test-notify-secret  # name of secret in the your namespace which contains slack web-hook URL under key specified in 'key-name' parameter below
         - name: key-name
@@ -113,7 +119,7 @@ spec:
       description: Build a source image.
       name: build-source-image
       type: string
-    - default: "false"
+    - default: "true"
       description: Add built image into an OCI image index
       name: build-image-index
       type: string
