@@ -65,26 +65,26 @@ jobs:
       - name: images
         run: |
           IMAGE_TAG=${{ needs.env.outputs.RELEASE_VERSION }}-${{ matrix.arch }} \
-          IMAGE_REGISTRY=quay.io/open-cluster-management \
+          IMAGE_REGISTRY=quay.io/zhujian \
           IMAGE_BUILD_EXTRA_FLAGS="--build-arg OS=linux --build-arg ARCH=${{ matrix.arch }}" \
             make image-${{ matrix.image-name }}
       - name: push
         run: |
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login quay.io --username ${{ secrets.DOCKER_USER }} --password-stdin
-          docker push quay.io/open-cluster-management/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }}-${{ matrix.arch }}
-          image_digest=$(docker inspect --format='{{index .RepoDigests 0}}' "quay.io/open-cluster-management/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }}-${{ matrix.arch }}" | cut -d'@' -f2)
+          docker push quay.io/zhujian/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }}-${{ matrix.arch }}
+          image_digest=$(docker inspect --format='{{index .RepoDigests 0}}' "quay.io/zhujian/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }}-${{ matrix.arch }}" | cut -d'@' -f2)
           echo "IMAGE_DIGEST=${image_digest}" >> $GITHUB_ENV
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
         with:
-          image: quay.io/open-cluster-management/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }}-${{ matrix.arch }}
+          image: quay.io/zhujian/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }}-${{ matrix.arch }}
           format: 'spdx-json'
           output-file: 'sbom.spdx.json'
       - name: Attest
         uses: actions/attest-sbom@v2
         id: attest
         with:
-          subject-name: quay.io/open-cluster-management/${{ matrix.image-name }}
+          subject-name: quay.io/zhujian/${{ matrix.image-name }}
           subject-digest: ${{ env.IMAGE_DIGEST }}
           sbom-path: 'sbom.spdx.json'
           push-to-registry: true
@@ -109,31 +109,31 @@ jobs:
       - name: create
         run: |
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login quay.io --username ${{ secrets.DOCKER_USER }} --password-stdin
-          docker manifest create quay.io/open-cluster-management/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }} \
-            quay.io/open-cluster-management/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }}-amd64 \
-            quay.io/open-cluster-management/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }}-arm64
+          docker manifest create quay.io/zhujian/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }} \
+            quay.io/zhujian/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }}-amd64 \
+            quay.io/zhujian/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }}-arm64
       - name: annotate
         run: |
-          docker manifest annotate quay.io/open-cluster-management/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }} \
-            quay.io/open-cluster-management/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }}-amd64 --arch amd64
-          docker manifest annotate quay.io/open-cluster-management/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }} \
-            quay.io/open-cluster-management/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }}-arm64 --arch arm64
+          docker manifest annotate quay.io/zhujian/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }} \
+            quay.io/zhujian/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }}-amd64 --arch amd64
+          docker manifest annotate quay.io/zhujian/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }} \
+            quay.io/zhujian/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }}-arm64 --arch arm64
       - name: push
         run: |
-          docker manifest push quay.io/open-cluster-management/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }}
-          image_digest_release=$(skopeo inspect docker://quay.io/open-cluster-management/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }} | jq -r '.Digest')
+          docker manifest push quay.io/zhujian/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }}
+          image_digest_release=$(skopeo inspect docker://quay.io/zhujian/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }} | jq -r '.Digest')
           echo "IMAGE_DIGEST_RELEASE=${image_digest_release}" >> $GITHUB_ENV
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
         with:
-          image: quay.io/open-cluster-management/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }}
+          image: quay.io/zhujian/${{ matrix.image-name }}:${{ needs.env.outputs.RELEASE_VERSION }}
           format: 'spdx-json'
           output-file: 'sbom.spdx.json'
       - name: Attest
         uses: actions/attest-sbom@v2
         id: attest
         with:
-          subject-name: quay.io/open-cluster-management/${{ matrix.image-name }}
+          subject-name: quay.io/zhujian/${{ matrix.image-name }}
           subject-digest: ${{ env.IMAGE_DIGEST_RELEASE }}
           sbom-path: 'sbom.spdx.json'
           push-to-registry: true
