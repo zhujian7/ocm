@@ -2,6 +2,8 @@ name: GoRelease
 
 permissions:
   contents: read
+  id-token: write
+  attestations: write
 
 on:
   pull_request:
@@ -89,10 +91,10 @@ jobs:
         with:
           path: /home/runner/work/ocm/ocm/go/src/open-cluster-management.io/ocm/release/
           format: 'spdx-json'
-          output-file: 'sbom.spdx.json'
+          artifact-name: 'ocm-charts.spdx.json'
       - name: Attest
         uses: actions/attest-sbom@v2
         id: attest
         with:
-          subject-path: /home/runner/work/ocm/ocm/go/src/open-cluster-management.io/ocm/release/
-          sbom-path: 'sbom.spdx.json'
+          subject-path: /home/runner/work/ocm/ocm/go/src/open-cluster-management.io/ocm/release/*.tgz
+          sbom-path: 'ocm-charts.spdx.json'
