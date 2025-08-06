@@ -16,7 +16,7 @@ defaults:
     working-directory: go/src/open-cluster-management.io/ocm
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
   attestations: write
 
