@@ -2,8 +2,6 @@ name: GoRelease
 
 permissions:
   contents: read
-  id-token: write
-  attestations: write
 
 on:
   pull_request:
@@ -46,6 +44,8 @@ jobs:
     needs: [ env ]
     permissions:
       contents: write
+      id-token: write
+      attestations: write
     steps:
       - name: checkout code
         uses: actions/checkout@v4
@@ -91,11 +91,11 @@ jobs:
         with:
           path: /home/runner/work/ocm/ocm/go/src/open-cluster-management.io/ocm/release/
           format: 'spdx-json'
-          # artifact-name: 'ocm-charts.spdx.json'
-          output-file: '/home/runner/work/cluster-manager-sbom-${{ needs.env.outputs.RELEASE_VERSION }}.spdx.json'
+          # artifact-name: 'cluster-manager-charts.spdx.json'
+          output-file: '${{ github.workspace }}/cluster-manager-sbom-${{ needs.env.outputs.TRIMMED_RELEASE_VERSION }}.spdx.json'
       - name: Attest
         uses: actions/attest-sbom@v2
         id: attest
         with:
           subject-path: /home/runner/work/ocm/ocm/go/src/open-cluster-management.io/ocm/release/cluster-manager-${{ needs.env.outputs.RELEASE_VERSION }}.tgz
-          sbom-path: '/home/runner/work/cluster-manager-sbom-${{ needs.env.outputs.RELEASE_VERSION }}.spdx.json'
+          sbom-path: '${{ github.workspace }}/cluster-manager-sbom-${{ needs.env.outputs.TRIMMED_RELEASE_VERSION }}.spdx.json'
