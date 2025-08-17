@@ -203,7 +203,7 @@ github.com/eclipse/paho.golang/paho/log
 github.com/eclipse/paho.golang/paho/session
 github.com/eclipse/paho.golang/paho/session/state
 github.com/eclipse/paho.golang/paho/store/memory
-# github.com/emicklei/go-restful/v3 v3.11.0
+# github.com/emicklei/go-restful/v3 v3.13.0
 ## explicit; go 1.13
 github.com/emicklei/go-restful/v3
 github.com/emicklei/go-restful/v3/log
