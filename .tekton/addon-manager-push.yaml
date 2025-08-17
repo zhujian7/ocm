@@ -56,37 +56,37 @@ spec:
         - name: kind
           value: task
         resolver: bundles
-    - name: slack-webhook-notification
-      params:
-        - name: message
-          value: |
-            :bangbang: <@$(params.slack-member-id)> PipelineRun name: $(context.pipelineRun.name) id: $(context.pipelineRun.uid) failed:
-            - git source: $(params.git-url)/commit/$(params.revision)
-            - target branch: $(params.git-url)/tree/{{target_branch}}
-            - output image: $(params.output-image)
-            - see details: https://konflux-ui.apps.stone-prd-rh01.pg1f.p1.openshiftapps.com/ns/$(context.pipelineRun.namespace)/applications/$(params.konflux-application-name)/pipelineruns/$(context.pipelineRun.name)
-        - name: secret-name
-          value: $(params.slack-webhook-url-secret-name)
-        - name: key-name
-          value: $(params.slack-webhook-url-secret-key)
-      taskRef:
-        params:
-        - name: bundle
-          value: quay.io/konflux-ci/tekton-catalog/task-slack-webhook-notification:0.1
-        - name: name
-          value: slack-webhook-notification
-        - name: kind
-          value: Task
-        resolver: bundles
-      when:
-        - input: $(tasks.status)
-          operator: in
-          values:
-          - "Failed"
-        - input: $(params.send-slack-notification)
-          operator: in
-          values:
-          - "true"
+    # - name: slack-webhook-notification
+    #   params:
+    #     - name: message
+    #       value: |
+    #         :bangbang: <@$(params.slack-member-id)> PipelineRun name: $(context.pipelineRun.name) id: $(context.pipelineRun.uid) failed:
+    #         - git source: $(params.git-url)/commit/$(params.revision)
+    #         - target branch: $(params.git-url)/tree/{{target_branch}}
+    #         - output image: $(params.output-image)
+    #         - see details: https://konflux-ui.apps.stone-prd-rh01.pg1f.p1.openshiftapps.com/ns/$(context.pipelineRun.namespace)/applications/$(params.konflux-application-name)/pipelineruns/$(context.pipelineRun.name)
+    #     - name: secret-name
+    #       value: $(params.slack-webhook-url-secret-name)
+    #     - name: key-name
+    #       value: $(params.slack-webhook-url-secret-key)
+    #   taskRef:
+    #     params:
+    #     - name: bundle
+    #       value: quay.io/konflux-ci/tekton-catalog/task-slack-webhook-notification:0.1
+    #     - name: name
+    #       value: slack-webhook-notification
+    #     - name: kind
+    #       value: Task
+    #     resolver: bundles
+    #   when:
+    #     - input: $(tasks.status)
+    #       operator: in
+    #       values:
+    #       - "Failed"
+    #     - input: $(params.send-slack-notification)
+    #       operator: in
+    #       values:
+    #       - "true"
     params:
     - description: Source Repository URL
       name: git-url
