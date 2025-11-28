@@ -1,3 +1,4 @@
+// Copyright Contributors to the Open Cluster Management project
 package v1
 
 import (
@@ -28,7 +29,7 @@ type Klusterlet struct {
 
 // KlusterletSpec represents the desired deployment configuration of Klusterlet agent.
 type KlusterletSpec struct {
-	// Namespace is the namespace to deploy the agent on the managed cluster.
+	// namespace is the namespace to deploy the agent on the managed cluster.
 	// The namespace must have a prefix of "open-cluster-management-", and if it is not set,
 	// the namespace of "open-cluster-management-agent" is used to deploy agent.
 	// In addition, the add-ons are deployed to the namespace of "{Namespace}-addon".
@@ -56,7 +57,7 @@ type KlusterletSpec struct {
 	// +optional
 	ImagePullSpec string `json:"imagePullSpec,omitempty"`
 
-	// ClusterName is the name of the managed cluster to be created on hub.
+	// clusterName is the name of the managed cluster to be created on hub.
 	// The Klusterlet agent generates a random name if it is not set, or discovers the appropriate cluster name on OpenShift.
 	// +optional
 	// +kubebuilder:validation:MaxLength=63
@@ -151,6 +152,10 @@ type RegistrationConfiguration struct {
 	// +optional
 	ClusterAnnotations map[string]string `json:"clusterAnnotations,omitempty"`
 
+	// ClusterLabels is labels set on ManagedCluster when creating only, other actors can update it afterwards.
+	// +optional
+	ClusterLabels map[string]string `json:"clusterLabels,omitempty"`
+
 	// KubeAPIQPS indicates the maximum QPS while talking with apiserver on the spoke cluster.
 	// If it is set empty, use the default value: 50
 	// +optional
@@ -203,7 +208,7 @@ type RegistrationDriver struct {
 	// Type of the authentication used by managedcluster to register as well as pull work from hub. Possible values are csr and awsirsa.
 	// +required
 	// +kubebuilder:default:=csr
-	// +kubebuilder:validation:Enum=csr;awsirsa
+	// +kubebuilder:validation:Enum=csr;awsirsa;grpc
 	AuthType string `json:"authType,omitempty"`
 
 	// Contain the details required for registering with hub cluster (ie: an EKS cluster) using AWS IAM roles for service account.

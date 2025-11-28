@@ -9,6 +9,9 @@ import (
 	"github.com/google/uuid"
 )
 
+// HeartbeatCloudEventsType indicates the type of heartbeat cloud events.
+const HeartbeatCloudEventsType = "io.open-cluster-management.cloudevents.heartbeat"
+
 const (
 	// ClusterAll is the default argument to specify on a context when you want to list or filter resources across all
 	// managed clusters.
@@ -37,8 +40,20 @@ const (
 	// ResyncRequestAction represents the cloud event is for the resync request.
 	ResyncRequestAction EventAction = "resync_request"
 
-	// ResyncRequestAction represents the cloud event is for the resync response.
+	// ResyncResponseAction represents the cloud event is for the resync response.
 	ResyncResponseAction EventAction = "resync_response"
+
+	// CreateRequestAction represents the cloud event is for resource create.
+	CreateRequestAction EventAction = "create_request"
+
+	// UpdateRequestAction represents the cloud event is for resource update.
+	UpdateRequestAction EventAction = "update_request"
+
+	// DeleteRequestAction represents the cloud event is for resource delete.
+	DeleteRequestAction EventAction = "delete_request"
+
+	// WatchRequestAction represents the cloud event is for resource watch.
+	WatchRequestAction EventAction = "watch_request"
 )
 
 const (
@@ -63,6 +78,9 @@ const (
 
 	// ExtensionStatusHash is the cloud event extension key of the status hash.
 	ExtensionStatusHash = "statushash"
+
+	// ExtensionWorkMeta is an extension attribute for work meta data.
+	ExtensionWorkMeta = "metadata"
 )
 
 // ResourceAction represents an action on a resource object on the source or agent.
