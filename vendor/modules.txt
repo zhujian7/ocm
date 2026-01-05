@@ -176,10 +176,12 @@ github.com/cloudevents/sdk-go/v2/event/datacodec/xml
 github.com/cloudevents/sdk-go/v2/protocol
 github.com/cloudevents/sdk-go/v2/protocol/http
 github.com/cloudevents/sdk-go/v2/types
-# github.com/confluentinc/confluent-kafka-go/v2 v2.3.0
-## explicit; go 1.17
+# github.com/confluentinc/confluent-kafka-go/v2 v2.13.0
+## explicit; go 1.24.3
 github.com/confluentinc/confluent-kafka-go/v2/kafka
 github.com/confluentinc/confluent-kafka-go/v2/kafka/librdkafka_vendor
+# github.com/containerd/containerd/api v1.7.19
+## explicit; go 1.21
 # github.com/coreos/go-semver v0.3.1
 ## explicit; go 1.8
 github.com/coreos/go-semver/semver
@@ -366,8 +368,6 @@ github.com/mitchellh/copystructure
 # github.com/mitchellh/reflectwalk v1.0.2
 ## explicit
 github.com/mitchellh/reflectwalk
-# github.com/moby/docker-image-spec v1.3.1
-## explicit; go 1.18
 # github.com/mochi-mqtt/server/v2 v2.6.6
 ## explicit; go 1.21
 github.com/mochi-mqtt/server/v2

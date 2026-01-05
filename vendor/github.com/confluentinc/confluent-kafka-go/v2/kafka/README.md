@@ -2,7 +2,7 @@
 
 ## Development process
 
-1. Use go1.19 (and related tooling) for development on confluent-kafka-go.
+1. Use go1.21 (and related tooling) for development on confluent-kafka-go.
 2. Make sure to run `gofmt` and `go vet` on your code.
 3. While there is no hard-limit, try to keep your line length under 80
    characters.
@@ -78,7 +78,7 @@ For each release candidate and final release, perform the following steps:
 
 ### Update bundle to latest librdkafka
 
-See instructions in [kafka/librdkafka/README.md](kafka/librdkafka/README.md).
+See instructions in [kafka/librdkafka_vendor/README.md](librdkafka_vendor/README.md).
 
 
 ### Update librdkafka version requirement
