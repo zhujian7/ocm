@@ -114,6 +114,8 @@ func (d *GRPCDialer) Close() error {
 // GRPCOptions holds the options that are used to build gRPC client.
 type GRPCOptions struct {
 	Dialer *GRPCDialer
+
+	ServerHealthinessTimeout *time.Duration
 }
 
 // GRPCConfig holds the information needed to build connect to gRPC server as a given user.
@@ -130,6 +132,10 @@ type GRPCConfig struct {
 
 	// keepalive options
 	KeepAliveConfig KeepAliveConfig `json:"keepAliveConfig,omitempty" yaml:"keepAliveConfig,omitempty"`
+
+	// serverHealthinessTimeout is the max duration that client will reconnect if no server healthiness status is
+	// received in this duration, if it is not set, client will not reconnect when health message is received
+	ServerHealthinessTimeout *time.Duration `json:"serverHealthinessTimeout,omitempty" yaml:"serverHealthinessTimeout,omitempty"`
 }
 
 // KeepAliveConfig holds the keepalive options for the gRPC client.
@@ -221,8 +227,10 @@ func BuildGRPCOptionsFromFlags(configPath string) (*GRPCOptions, error) {
 	// Set the keepalive options
 	options.Dialer.KeepAliveOptions = keepAliveOptions
 
+	// If token or client certs are provided, set up TLS configuration for the gRPC connection,
+	// the certificates will be reloaded periodically.
+	// Note: setting token requires authority certificates
 	if token != "" || config.CertConfig.HasCerts() {
-		// Set up TLS configuration for the gRPC connection, the certificates will be reloaded periodically.
 		options.Dialer.TLSConfig, err = cert.AutoLoadTLSConfig(
 			config.CertConfig,
 			func() (*cert.CertConfig, error) {
@@ -239,6 +247,7 @@ func BuildGRPCOptionsFromFlags(configPath string) (*GRPCOptions, error) {
 		}
 	}
 
+	options.ServerHealthinessTimeout = config.ServerHealthinessTimeout
 	return options, nil
 }
 
