@@ -1826,7 +1826,7 @@ open-cluster-management.io/sdk-go/pkg/cloudevents/generic/payload
 open-cluster-management.io/sdk-go/pkg/cloudevents/generic/types
 open-cluster-management.io/sdk-go/pkg/helpers
 open-cluster-management.io/sdk-go/pkg/patcher
-# sigs.k8s.io/about-api v0.0.0-20250131010323-518069c31c03
+# sigs.k8s.io/about-api v0.0.0-20260107170941-69ff9f0b639f
 ## explicit; go 1.22
 sigs.k8s.io/about-api/pkg/apis/v1alpha1
 sigs.k8s.io/about-api/pkg/generated/clientset/versioned
