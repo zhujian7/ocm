@@ -13,7 +13,7 @@ import (
 
 // Disables the management of privileged root user credentials across member
 // accounts in your organization. When you disable this feature, the management
-// account and the delegated admininstrator for IAM can no longer manage root user
+// account and the delegated administrator for IAM can no longer manage root user
 // credentials for member accounts in your organization.
 func (c *Client) DisableOrganizationsRootCredentialsManagement(ctx context.Context, params *DisableOrganizationsRootCredentialsManagementInput, optFns ...func(*Options)) (*DisableOrganizationsRootCredentialsManagementOutput, error) {
 	if params == nil {
@@ -113,6 +113,9 @@ func (c *Client) addOperationDisableOrganizationsRootCredentialsManagementMiddle
 	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
+	if err = addCredentialSource(stack, options); err != nil {
+		return err
+	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDisableOrganizationsRootCredentialsManagement(options.Region), middleware.Before); err != nil {
 		return err
 	}
@@ -131,16 +134,13 @@ func (c *Client) addOperationDisableOrganizationsRootCredentialsManagementMiddle
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
 		return err
 	}
-	if err = addSpanInitializeStart(stack); err != nil {
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
 		return err
 	}
-	if err = addSpanInitializeEnd(stack); err != nil {
+	if err = addInterceptAttempt(stack, options); err != nil {
 		return err
 	}
-	if err = addSpanBuildRequestStart(stack); err != nil {
-		return err
-	}
-	if err = addSpanBuildRequestEnd(stack); err != nil {
+	if err = addInterceptors(stack, options); err != nil {
 		return err
 	}
 	return nil
